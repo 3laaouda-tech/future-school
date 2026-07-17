@@ -3,17 +3,23 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Pool manages a set of pre-opened connections to the database
-// instead of opening a new connection for every query - much better for performance
-export const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  port: Number(process.env.DB_PORT) || 5432,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+// If DATABASE_URL is set (used by cloud providers like Neon or Supabase),
+// connect with it directly and enable SSL, which those providers require.
+// Otherwise fall back to the discrete host/port/user/... variables, which
+// is simpler for local development and doesn't need SSL.
+export const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    })
+  : new Pool({
+      host: process.env.DB_HOST || "localhost",
+      port: Number(process.env.DB_PORT) || 5432,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
 
-// Helper to confirm the connection works when the server starts
 export async function testConnection(): Promise<void> {
   try {
     const result = await pool.query("SELECT NOW()");
