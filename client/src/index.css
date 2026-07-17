@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  --color-marigold: #FFB238;
+  --color-sky-teal: #2FA9A0;
+  --color-coral: #FF6F5E;
+  --color-leaf: #7CC576;
+  --color-ink: #2B3A55;
+  --color-sun-cream: #FFF8E7;
+
+  --font-display: "Fredoka", sans-serif;
+  --font-body: "Nunito", sans-serif;
+}
+
+body {
+  background-color: var(--color-sun-cream);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
