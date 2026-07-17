@@ -7,17 +7,18 @@ export interface StudentClassInfo {
 }
 
 // A student is enrolled in one class per academic year - we return
-// their most recent enrollment.
+// their most recent enrollment (most recent academic year first).
 export async function getStudentClass(studentId: number): Promise<StudentClassInfo | null> {
   const result = await pool.query<StudentClassInfo>(
     `SELECT
        c.id AS "classId",
        c.name AS "className",
-       e.academic_year AS "academicYear"
+       ay.label AS "academicYear"
      FROM enrollments e
      JOIN classes c ON c.id = e.class_id
+     JOIN academic_years ay ON ay.id = e.academic_year_id
      WHERE e.student_id = $1
-     ORDER BY e.academic_year DESC
+     ORDER BY ay.label DESC
      LIMIT 1`,
     [studentId]
   );

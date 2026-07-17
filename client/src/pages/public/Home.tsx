@@ -66,26 +66,22 @@ export default function Home() {
 
           {/* Signature element: the learning journey path */}
           <div className="rounded-3xl bg-white/60 p-8">
-            <p className="mb-6 font-body text-sm font-bold text-ink/60">
+            <p className="mb-8 font-body text-sm font-bold text-ink/60">
               Your child's journey with us
             </p>
-            <div className="flex items-end justify-between">
-              {journeyStops.map((stop, i) => (
-                <div key={stop.label} className="flex flex-col items-center">
-                  <div
-                    className={`flex h-14 w-14 items-center justify-center rounded-full bg-sun-cream text-2xl shadow-sm ${
-                      i % 2 === 1 ? "mb-4" : ""
-                    }`}
-                  >
+            <div className="relative flex justify-between">
+              <div className="absolute left-0 right-0 top-7 border-t-2 border-dashed border-ink/20" />
+              {journeyStops.map((stop) => (
+                <div key={stop.label} className="relative z-10 flex w-16 flex-col items-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sun-cream text-2xl shadow-sm">
                     {stop.icon}
                   </div>
-                  <p className="mt-2 w-16 text-center font-body text-xs font-semibold text-ink/70">
+                  <p className="mt-2 flex h-8 items-center justify-center text-center font-body text-xs font-semibold leading-tight text-ink/70">
                     {stop.label}
                   </p>
                 </div>
               ))}
             </div>
-            <div className="mt-2 border-t-2 border-dashed border-ink/20" />
           </div>
         </div>
       </section>
