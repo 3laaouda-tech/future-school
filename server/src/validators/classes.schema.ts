@@ -9,9 +9,7 @@ export const createClassSchema = z.object({
   gradeLevel: z.enum(gradeLevels, {
     errorMap: () => ({ message: "Please select a valid grade level" }),
   }),
-  academicYear: z
-    .string()
-    .regex(/^\d{4}-\d{4}$/, 'Academic year must look like "2026-2027"'),
+  academicYearId: z.number().int().positive("Academic year is required"),
 });
 
 export type CreateClassInput = z.infer<typeof createClassSchema>;

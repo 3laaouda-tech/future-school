@@ -4,7 +4,7 @@ import type { EnrollmentView } from "../types/enrollments";
 interface CreateEnrollmentPayload {
   studentId: number;
   classId: number;
-  academicYear: string;
+  academicYearId: number;
 }
 
 export function getEnrollmentsRequest(token: string): Promise<{ enrollments: EnrollmentView[] }> {

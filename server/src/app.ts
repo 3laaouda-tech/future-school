@@ -12,6 +12,7 @@ import enrollmentsRoutes from "./routes/enrollments.routes";
 import studentRoutes from "./routes/student.routes";
 import parentStudentRoutes from "./routes/parentStudent.routes";
 import parentRoutes from "./routes/parent.routes";
+import academicYearsRoutes from "./routes/academicYears.routes";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/enrollments", enrollmentsRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/parent-students", parentStudentRoutes);
 app.use("/api/parent", parentRoutes);
+app.use("/api/academic-years", academicYearsRoutes);
 // more routes will be registered here as we build them:
 // app.use("/api/users", usersRoutes);
 

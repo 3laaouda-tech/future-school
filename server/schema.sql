@@ -37,14 +37,23 @@ CREATE TABLE parents (
 );
 
 -- ============================================
--- 3. Classes and subjects
+-- 3. Academic years (referenced by classes and enrollments)
+-- ============================================
+CREATE TABLE academic_years (
+    id SERIAL PRIMARY KEY,
+    label VARCHAR(20) NOT NULL UNIQUE CHECK (label ~ '^\d{4}-\d{4}$'), -- e.g. "2026-2027"
+    is_current BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- ============================================
+-- 4. Classes and subjects
 -- ============================================
 CREATE TABLE classes (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,          -- e.g. "Grade 7 - A"
     grade_level VARCHAR(20) NOT NULL,    -- e.g. "7"
-    academic_year VARCHAR(20) NOT NULL,  -- e.g. "2026-2027"
-    UNIQUE (name, academic_year)
+    academic_year_id INTEGER NOT NULL REFERENCES academic_years(id) ON DELETE RESTRICT,
+    UNIQUE (name, academic_year_id)
 );
 
 CREATE TABLE subjects (
@@ -53,7 +62,7 @@ CREATE TABLE subjects (
 );
 
 -- ============================================
--- 4. Links teacher, subject, and class together
+-- 5. Links teacher, subject, and class together
 -- ============================================
 CREATE TABLE class_subjects (
     id SERIAL PRIMARY KEY,
@@ -64,18 +73,18 @@ CREATE TABLE class_subjects (
 );
 
 -- ============================================
--- 5. Student enrollment per class (historical, by year)
+-- 6. Student enrollment per class (historical, by year)
 -- ============================================
 CREATE TABLE enrollments (
     id SERIAL PRIMARY KEY,
     student_id INTEGER NOT NULL REFERENCES students(user_id) ON DELETE CASCADE,
     class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-    academic_year VARCHAR(20) NOT NULL,
-    UNIQUE (student_id, academic_year)  -- a student is in only one class per year
+    academic_year_id INTEGER NOT NULL REFERENCES academic_years(id) ON DELETE RESTRICT,
+    UNIQUE (student_id, academic_year_id)  -- a student is in only one class per year
 );
 
 -- ============================================
--- 6. Parent-student relationship (many-to-many)
+-- 7. Parent-student relationship (many-to-many)
 -- ============================================
 CREATE TABLE parent_student (
     parent_id INTEGER NOT NULL REFERENCES parents(user_id) ON DELETE CASCADE,
@@ -85,7 +94,7 @@ CREATE TABLE parent_student (
 );
 
 -- ============================================
--- 7. Attendance
+-- 8. Attendance
 -- ============================================
 CREATE TABLE attendance (
     id SERIAL PRIMARY KEY,
@@ -98,7 +107,7 @@ CREATE TABLE attendance (
 );
 
 -- ============================================
--- 8. Grades
+-- 9. Grades
 -- ============================================
 CREATE TABLE grades (
     id SERIAL PRIMARY KEY,

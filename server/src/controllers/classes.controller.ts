@@ -9,7 +9,8 @@ function toPublicClass(cls: ClassRecord) {
     id: cls.id,
     name: cls.name,
     gradeLevel: cls.grade_level,
-    academicYear: cls.academic_year,
+    academicYearId: cls.academic_year_id,
+    academicYearLabel: cls.academic_year_label,
   };
 }
 

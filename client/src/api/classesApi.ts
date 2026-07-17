@@ -4,7 +4,7 @@ import type { SchoolClass } from "../types/classes";
 interface CreateClassPayload {
   name: string;
   gradeLevel: string;
-  academicYear: string;
+  academicYearId: number;
 }
 
 export function getClassesRequest(token: string): Promise<{ classes: SchoolClass[] }> {

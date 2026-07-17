@@ -21,7 +21,7 @@ export const postEnrollment = asyncHandler(async (req: Request, res: Response) =
       throw new AppError("This student is already enrolled for this academic year", 409);
     }
     if (error.code === "23503") {
-      throw new AppError("Invalid student or class", 400);
+      throw new AppError("Invalid student, class, or academic year", 400);
     }
     throw error;
   }

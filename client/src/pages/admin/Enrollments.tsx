@@ -5,10 +5,12 @@ import { useAuth } from "../../context/AuthContext";
 import { getClassesRequest } from "../../api/classesApi";
 import { getUsersRequest } from "../../api/usersApi";
 import { getEnrollmentsRequest, createEnrollmentRequest } from "../../api/enrollmentsApi";
+import { getAcademicYearsRequest } from "../../api/academicYearsApi";
 import { ApiError } from "../../api/client";
 import type { SchoolClass } from "../../types/classes";
 import type { User } from "../../types/auth";
 import type { EnrollmentView } from "../../types/enrollments";
+import type { AcademicYear } from "../../types/academicYears";
 
 export default function Enrollments() {
   const { token } = useAuth();
@@ -16,12 +18,13 @@ export default function Enrollments() {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentView[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [studentId, setStudentId] = useState("");
   const [classId, setClassId] = useState("");
-  const [academicYear, setAcademicYear] = useState("");
+  const [academicYearId, setAcademicYearId] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,11 +34,15 @@ export default function Enrollments() {
       getClassesRequest(currentToken),
       getUsersRequest(currentToken),
       getEnrollmentsRequest(currentToken),
+      getAcademicYearsRequest(currentToken),
     ])
-      .then(([classesData, usersData, enrollmentsData]) => {
+      .then(([classesData, usersData, enrollmentsData, yearsData]) => {
         setClasses(classesData.classes);
         setStudents(usersData.users.filter((u) => u.role === "student"));
         setEnrollments(enrollmentsData.enrollments);
+        setAcademicYears(yearsData.academicYears);
+        const current = yearsData.academicYears.find((y) => y.isCurrent);
+        setAcademicYearId(String((current ?? yearsData.academicYears[0])?.id ?? ""));
       })
       .catch((err) => setLoadError(err instanceof ApiError ? err.message : "Something went wrong"))
       .finally(() => setIsLoading(false));
@@ -50,7 +57,7 @@ export default function Enrollments() {
     setFormError(null);
 
     if (!token) return;
-    if (!studentId || !classId || !academicYear) {
+    if (!studentId || !classId || !academicYearId) {
       setFormError("Please fill in all fields.");
       return;
     }
@@ -58,12 +65,11 @@ export default function Enrollments() {
     setIsSubmitting(true);
     try {
       await createEnrollmentRequest(
-        { studentId: Number(studentId), classId: Number(classId), academicYear },
+        { studentId: Number(studentId), classId: Number(classId), academicYearId: Number(academicYearId) },
         token
       );
       setStudentId("");
       setClassId("");
-      setAcademicYear("");
       loadAll(token);
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -87,9 +93,10 @@ export default function Enrollments() {
 
       {!isLoading && !loadError && (
         <>
-          {classes.length === 0 || students.length === 0 ? (
+          {classes.length === 0 || students.length === 0 || academicYears.length === 0 ? (
             <p className="mt-6 rounded-2xl bg-white p-4 font-body text-sm text-ink/60">
-              You need at least one class and one student before you can enroll anyone.
+              You need at least one class, one student, and one academic year before you can
+              enroll anyone.
             </p>
           ) : (
             <form
@@ -135,17 +142,21 @@ export default function Enrollments() {
               </div>
 
               <div>
-                <label htmlFor="academicYear" className="font-body text-sm font-semibold text-ink/70">
+                <label htmlFor="academicYearId" className="font-body text-sm font-semibold text-ink/70">
                   Academic year
                 </label>
-                <input
-                  id="academicYear"
-                  type="text"
-                  placeholder="2026-2027"
-                  value={academicYear}
-                  onChange={(e) => setAcademicYear(e.target.value)}
+                <select
+                  id="academicYearId"
+                  value={academicYearId}
+                  onChange={(e) => setAcademicYearId(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-                />
+                >
+                  {academicYears.map((y) => (
+                    <option key={y.id} value={y.id}>
+                      {y.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button

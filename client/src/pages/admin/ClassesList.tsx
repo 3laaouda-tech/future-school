@@ -8,22 +8,25 @@ import {
   updateClassRequest,
   deleteClassRequest,
 } from "../../api/classesApi";
+import { getAcademicYearsRequest } from "../../api/academicYearsApi";
 import { ApiError } from "../../api/client";
 import { gradeLevels } from "../../constants";
 import type { SchoolClass } from "../../types/classes";
+import type { AcademicYear } from "../../types/academicYears";
 
 interface ClassRowProps {
   cls: SchoolClass;
   token: string;
+  academicYears: AcademicYear[];
   onUpdated: (cls: SchoolClass) => void;
   onDeleted: (id: number) => void;
 }
 
-function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
+function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(cls.name);
   const [gradeLevel, setGradeLevel] = useState(cls.gradeLevel);
-  const [academicYear, setAcademicYear] = useState(cls.academicYear);
+  const [academicYearId, setAcademicYearId] = useState(String(cls.academicYearId));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,7 +37,7 @@ function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
     try {
       const { class: updated } = await updateClassRequest(
         cls.id,
-        { name, gradeLevel, academicYear },
+        { name, gradeLevel, academicYearId: Number(academicYearId) },
         token
       );
       onUpdated(updated);
@@ -83,11 +86,17 @@ function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
                 </option>
               ))}
             </select>
-            <input
-              value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)}
+            <select
+              value={academicYearId}
+              onChange={(e) => setAcademicYearId(e.target.value)}
               className="rounded-xl border border-ink/10 bg-white px-3 py-1.5 font-body text-sm"
-            />
+            >
+              {academicYears.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.label}
+                </option>
+              ))}
+            </select>
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
@@ -101,7 +110,7 @@ function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
                   setIsEditing(false);
                   setName(cls.name);
                   setGradeLevel(cls.gradeLevel);
-                  setAcademicYear(cls.academicYear);
+                  setAcademicYearId(String(cls.academicYearId));
                   setError(null);
                 }}
                 className="rounded-full border-2 border-ink/10 px-4 py-1.5 font-body text-sm font-bold text-ink"
@@ -120,7 +129,7 @@ function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
     <tr className="border-t border-ink/5">
       <td className="px-6 py-3 text-ink">{cls.name}</td>
       <td className="px-6 py-3 text-ink/70">{cls.gradeLevel}</td>
-      <td className="px-6 py-3 text-ink/70">{cls.academicYear}</td>
+      <td className="px-6 py-3 text-ink/70">{cls.academicYearLabel}</td>
       <td className="px-6 py-3 text-right">
         <button
           onClick={() => setIsEditing(true)}
@@ -144,26 +153,33 @@ export default function ClassesList() {
   const { token } = useAuth();
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [gradeLevel, setGradeLevel] = useState<string>(gradeLevels[0]);
-  const [academicYear, setAcademicYear] = useState("");
+  const [academicYearId, setAcademicYearId] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
 
-  function loadClasses(currentToken: string) {
+  function loadAll(currentToken: string) {
     setIsLoading(true);
-    getClassesRequest(currentToken)
-      .then((data) => setClasses(data.classes))
+    Promise.all([getClassesRequest(currentToken), getAcademicYearsRequest(currentToken)])
+      .then(([classesData, yearsData]) => {
+        setClasses(classesData.classes);
+        setAcademicYears(yearsData.academicYears);
+        // default the form to the current academic year, if there is one
+        const current = yearsData.academicYears.find((y) => y.isCurrent);
+        setAcademicYearId(String((current ?? yearsData.academicYears[0])?.id ?? ""));
+      })
       .catch((err) => setLoadError(err instanceof ApiError ? err.message : "Something went wrong"))
       .finally(() => setIsLoading(false));
   }
 
   useEffect(() => {
-    if (token) loadClasses(token);
+    if (token) loadAll(token);
   }, [token]);
 
   async function handleSubmit(e: FormEvent) {
@@ -171,14 +187,20 @@ export default function ClassesList() {
     setFormError(null);
 
     if (!token) return;
+    if (!academicYearId) {
+      setFormError("Please add an academic year first.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await createClassRequest({ name, gradeLevel, academicYear }, token);
+      await createClassRequest(
+        { name, gradeLevel, academicYearId: Number(academicYearId) },
+        token
+      );
       setName("");
       setGradeLevel(gradeLevels[0]);
-      setAcademicYear("");
-      loadClasses(token);
+      loadAll(token);
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -200,7 +222,7 @@ export default function ClassesList() {
     return (
       c.name.toLowerCase().includes(q) ||
       c.gradeLevel.toLowerCase().includes(q) ||
-      c.academicYear.toLowerCase().includes(q)
+      c.academicYearLabel.toLowerCase().includes(q)
     );
   });
 
@@ -211,71 +233,86 @@ export default function ClassesList() {
       </Link>
       <h1 className="mt-2 font-display text-2xl font-semibold text-ink">Classes</h1>
 
+      {!isLoading && !loadError && academicYears.length === 0 && (
+        <p className="mt-6 rounded-2xl bg-white p-4 font-body text-sm text-ink/60">
+          You need to{" "}
+          <Link to="/admin/academic-years" className="font-bold text-sky-teal hover:underline">
+            add an academic year
+          </Link>{" "}
+          before you can create a class.
+        </p>
+      )}
+
       {/* Add class form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-4 md:items-end"
-      >
-        <div>
-          <label htmlFor="name" className="font-body text-sm font-semibold text-ink/70">
-            Class name
-          </label>
-          <input
-            id="name"
-            type="text"
-            placeholder='e.g. "Grade 7 - A"'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="gradeLevel" className="font-body text-sm font-semibold text-ink/70">
-            Grade level
-          </label>
-          <select
-            id="gradeLevel"
-            value={gradeLevel}
-            onChange={(e) => setGradeLevel(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-          >
-            {gradeLevels.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="academicYear" className="font-body text-sm font-semibold text-ink/70">
-            Academic year
-          </label>
-          <input
-            id="academicYear"
-            type="text"
-            placeholder="2026-2027"
-            value={academicYear}
-            onChange={(e) => setAcademicYear(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-full bg-marigold px-6 py-2 font-body font-bold text-ink transition-transform hover:scale-105 disabled:opacity-60"
+      {academicYears.length > 0 && (
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-4 md:items-end"
         >
-          {isSubmitting ? "Adding..." : "+ Add class"}
-        </button>
+          <div>
+            <label htmlFor="name" className="font-body text-sm font-semibold text-ink/70">
+              Class name
+            </label>
+            <input
+              id="name"
+              type="text"
+              placeholder='e.g. "Grade 7 - A"'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
+              required
+            />
+          </div>
 
-        {formError && (
-          <p className="font-body text-sm font-semibold text-coral md:col-span-4">{formError}</p>
-        )}
-      </form>
+          <div>
+            <label htmlFor="gradeLevel" className="font-body text-sm font-semibold text-ink/70">
+              Grade level
+            </label>
+            <select
+              id="gradeLevel"
+              value={gradeLevel}
+              onChange={(e) => setGradeLevel(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
+            >
+              {gradeLevels.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="academicYearId" className="font-body text-sm font-semibold text-ink/70">
+              Academic year
+            </label>
+            <select
+              id="academicYearId"
+              value={academicYearId}
+              onChange={(e) => setAcademicYearId(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
+            >
+              {academicYears.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-full bg-marigold px-6 py-2 font-body font-bold text-ink transition-transform hover:scale-105 disabled:opacity-60"
+          >
+            {isSubmitting ? "Adding..." : "+ Add class"}
+          </button>
+
+          {formError && (
+            <p className="font-body text-sm font-semibold text-coral md:col-span-4">{formError}</p>
+          )}
+        </form>
+      )}
 
       {/* Classes list */}
       <input
@@ -312,6 +349,7 @@ export default function ClassesList() {
                   key={cls.id}
                   cls={cls}
                   token={token}
+                  academicYears={academicYears}
                   onUpdated={handleUpdated}
                   onDeleted={handleDeleted}
                 />

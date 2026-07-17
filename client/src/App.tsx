@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AddUser from "./pages/admin/AddUser";
 import UsersList from "./pages/admin/UsersList";
 import ClassesList from "./pages/admin/ClassesList";
+import AcademicYears from "./pages/admin/AcademicYears";
 import SubjectsList from "./pages/admin/SubjectsList";
 import ClassSubjects from "./pages/admin/ClassSubjects";
 import Enrollments from "./pages/admin/Enrollments";
@@ -64,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <ClassesList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/academic-years"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AcademicYears />
             </ProtectedRoute>
           }
         />

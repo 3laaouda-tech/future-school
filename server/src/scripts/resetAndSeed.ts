@@ -3,6 +3,7 @@ dotenv.config();
 
 import { pool } from "../config/db";
 import { createUser } from "../services/auth.service";
+import { createAcademicYear, setCurrentAcademicYear } from "../services/academicYears.service";
 import { createClass } from "../services/classes.service";
 import type { gradeLevels } from "../validators/classes.schema";
 import { createSubject } from "../services/subjects.service";
@@ -19,7 +20,8 @@ async function resetDatabase(): Promise<void> {
   await pool.query(
     `TRUNCATE TABLE
        grades, attendance, parent_student, enrollments,
-       class_subjects, subjects, classes, parents, students, teachers, users
+       class_subjects, subjects, classes, academic_years,
+       parents, students, teachers, users
      RESTART IDENTITY CASCADE`
   );
   console.log("Database cleared.");
@@ -65,6 +67,11 @@ async function seed(): Promise<void> {
   });
   console.log("Admin created.");
 
+  // ---- Academic year ----
+  const academicYear = await createAcademicYear({ label: ACADEMIC_YEAR });
+  await setCurrentAcademicYear(academicYear.id);
+  console.log("Academic year created.");
+
   // ---- Subjects (10 core school subjects) ----
   const subjectNames = [
     "Arabic",
@@ -104,7 +111,7 @@ async function seed(): Promise<void> {
     const cls = await createClass({
       name: `Grade ${grade} - A`,
       gradeLevel: String(grade) as (typeof gradeLevels)[number],
-      academicYear: ACADEMIC_YEAR,
+      academicYearId: academicYear.id,
     });
     classes.push(cls);
   }
@@ -143,7 +150,7 @@ async function seed(): Promise<void> {
     await createEnrollment({
       studentId: students[i].id,
       classId: cls.id,
-      academicYear: ACADEMIC_YEAR,
+      academicYearId: academicYear.id,
     });
   }
   console.log("Students enrolled.");
