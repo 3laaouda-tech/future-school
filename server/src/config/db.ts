@@ -20,6 +20,7 @@ export const pool = process.env.DATABASE_URL
       database: process.env.DB_NAME,
     });
 
+// Helper to confirm the connection works when the server starts
 export async function testConnection(): Promise<void> {
   try {
     const result = await pool.query("SELECT NOW()");

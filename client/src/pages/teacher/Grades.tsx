@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getClassStudentsRequest } from "../../api/attendanceApi";
 import { getGradesRequest, submitGradeRequest } from "../../api/gradesApi";
 import { ApiError } from "../../api/client";
+import { terms, assessmentTypes } from "../../constants";
 import type { StudentInClass } from "../../types/attendance";
 import type { GradeView } from "../../types/grades";
 
@@ -20,8 +21,8 @@ export default function Grades() {
   const [error, setError] = useState<string | null>(null);
 
   const [studentId, setStudentId] = useState("");
-  const [term, setTerm] = useState("");
-  const [assessmentType, setAssessmentType] = useState("");
+  const [term, setTerm] = useState<string>(terms[0]);
+  const [assessmentType, setAssessmentType] = useState<string>(assessmentTypes[0]);
   const [score, setScore] = useState("");
   const [maxScore, setMaxScore] = useState("100");
   const [formError, setFormError] = useState<string | null>(null);
@@ -74,8 +75,8 @@ export default function Grades() {
         token
       );
       setStudentId("");
-      setTerm("");
-      setAssessmentType("");
+      setTerm(terms[0]);
+      setAssessmentType(assessmentTypes[0]);
       setScore("");
       setMaxScore("100");
       loadGrades(token);
@@ -130,28 +131,36 @@ export default function Grades() {
                 <label htmlFor="term" className="font-body text-sm font-semibold text-ink/70">
                   Term
                 </label>
-                <input
+                <select
                   id="term"
-                  type="text"
-                  placeholder='e.g. "Term 1"'
                   value={term}
                   onChange={(e) => setTerm(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-                />
+                >
+                  {terms.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label htmlFor="assessmentType" className="font-body text-sm font-semibold text-ink/70">
                   Assessment type
                 </label>
-                <input
+                <select
                   id="assessmentType"
-                  type="text"
-                  placeholder='e.g. "Quiz"'
                   value={assessmentType}
                   onChange={(e) => setAssessmentType(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-                />
+                >
+                  {assessmentTypes.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

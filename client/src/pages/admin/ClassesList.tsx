@@ -9,6 +9,7 @@ import {
   deleteClassRequest,
 } from "../../api/classesApi";
 import { ApiError } from "../../api/client";
+import { gradeLevels } from "../../constants";
 import type { SchoolClass } from "../../types/classes";
 
 interface ClassRowProps {
@@ -71,11 +72,17 @@ function ClassRow({ cls, token, onUpdated, onDeleted }: ClassRowProps) {
               onChange={(e) => setName(e.target.value)}
               className="rounded-xl border border-ink/10 bg-white px-3 py-1.5 font-body text-sm"
             />
-            <input
+            <select
               value={gradeLevel}
               onChange={(e) => setGradeLevel(e.target.value)}
               className="rounded-xl border border-ink/10 bg-white px-3 py-1.5 font-body text-sm"
-            />
+            >
+              {gradeLevels.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
             <input
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}
@@ -141,7 +148,7 @@ export default function ClassesList() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [gradeLevel, setGradeLevel] = useState("");
+  const [gradeLevel, setGradeLevel] = useState<string>(gradeLevels[0]);
   const [academicYear, setAcademicYear] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -169,7 +176,7 @@ export default function ClassesList() {
     try {
       await createClassRequest({ name, gradeLevel, academicYear }, token);
       setName("");
-      setGradeLevel("");
+      setGradeLevel(gradeLevels[0]);
       setAcademicYear("");
       loadClasses(token);
     } catch (err) {
@@ -228,15 +235,18 @@ export default function ClassesList() {
           <label htmlFor="gradeLevel" className="font-body text-sm font-semibold text-ink/70">
             Grade level
           </label>
-          <input
+          <select
             id="gradeLevel"
-            type="text"
-            placeholder='e.g. "7"'
             value={gradeLevel}
             onChange={(e) => setGradeLevel(e.target.value)}
             className="mt-1 w-full rounded-xl border border-ink/10 bg-sun-cream px-4 py-2 font-body"
-            required
-          />
+          >
+            {gradeLevels.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

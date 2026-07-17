@@ -4,6 +4,7 @@ dotenv.config();
 import { pool } from "../config/db";
 import { createUser } from "../services/auth.service";
 import { createClass } from "../services/classes.service";
+import type { gradeLevels } from "../validators/classes.schema";
 import { createSubject } from "../services/subjects.service";
 import { createClassSubject } from "../services/classSubjects.service";
 import { createEnrollment } from "../services/enrollments.service";
@@ -102,7 +103,7 @@ async function seed(): Promise<void> {
   for (let grade = 1; grade <= 13; grade++) {
     const cls = await createClass({
       name: `Grade ${grade} - A`,
-      gradeLevel: String(grade),
+      gradeLevel: String(grade) as (typeof gradeLevels)[number],
       academicYear: ACADEMIC_YEAR,
     });
     classes.push(cls);
