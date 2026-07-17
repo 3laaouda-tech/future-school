@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ApiError } from "../../api/client";
+import Logo from "../../components/Logo";
 
 export default function Login() {
   const { login } = useAuth();
@@ -33,9 +34,10 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <Link
           to="/"
-          className="mb-6 block text-center font-display text-xl font-semibold text-ink"
+          className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-semibold text-ink"
         >
-          🌱 Future School
+          <Logo />
+          Future School
         </Link>
 
         <form onSubmit={handleSubmit} className="rounded-3xl bg-white p-8 shadow-sm">

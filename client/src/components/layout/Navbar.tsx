@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import Logo from "../Logo";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -12,8 +13,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-sun-cream/90 backdrop-blur-sm">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="font-display text-xl font-semibold text-ink">
-          🌱 Future School
+        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold text-ink">
+          <Logo />
+          Future School
         </Link>
 
         <div className="hidden gap-2 rounded-full bg-white/60 p-1 md:flex">

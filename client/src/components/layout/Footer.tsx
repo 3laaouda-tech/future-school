@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
+import Logo from "../Logo";
 
 export default function Footer() {
   return (
     <footer className="bg-sky-teal font-body text-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 md:flex-row md:justify-between">
         <div>
-          <p className="font-display text-lg font-semibold">🌱 Future School</p>
+          <p className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Logo />
+            Future School
+          </p>
           <p className="mt-2 max-w-xs text-sm text-white/80">
             Growing curious minds, one school day at a time.
           </p>
