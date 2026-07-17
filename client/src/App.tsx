@@ -3,6 +3,8 @@ import PublicLayout from "./components/layout/PublicLayout";
 import AppLayout from "./components/layout/AppLayout";
 import Home from "./pages/public/Home";
 import About from "./pages/public/About";
+import Documentation from "./pages/public/Documentation";
+import HowToWork from "./pages/public/HowToWork";
 import Contact from "./pages/public/Contact";
 import Login from "./pages/auth/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -28,6 +30,8 @@ function App() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/docs" element={<Documentation />} />
+        <Route path="/how-to-work" element={<HowToWork />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
 
