@@ -15,6 +15,7 @@ import {
   listGradesForClassSubject,
 } from "../services/grades.service";
 import { submitGradeSchema } from "../validators/grades.schema";
+import { getTimetableForTeacher } from "../services/timetable.service";
 
 // ============================================
 // GET /api/teacher/my-classes - Teacher only
@@ -127,4 +128,14 @@ export const postGrade = asyncHandler(async (req: Request, res: Response) => {
 
   const grade = await createGrade(classId, subjectId, req.user.id, parsed.data);
   res.status(201).json({ grade });
+});
+
+// ============================================
+// GET /api/teacher/my-timetable - Teacher only
+// ============================================
+export const getMyTimetable = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError("Not authenticated", 401);
+
+  const entries = await getTimetableForTeacher(req.user.id);
+  res.json({ entries });
 });

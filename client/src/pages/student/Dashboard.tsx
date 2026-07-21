@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getMyClassRequest, getMyAttendanceRequest, getMyGradesRequest } from "../../api/studentApi";
+import { getMyClassRequest, getMyAttendanceRequest, getMyGradesRequest, getMyStudentTimetableRequest } from "../../api/studentApi";
 import { ApiError } from "../../api/client";
 import { Skeleton, SkeletonCard } from "../../components/Skeleton";
+import TimetableGrid from "../../components/TimetableGrid";
 import type {
   StudentClassInfo,
   StudentSubjectView,
   StudentAttendanceEntry,
   StudentGradeEntry,
 } from "../../types/student";
+import type { TimetableEntryView } from "../../types/timetable";
 
 const statusColor: Record<string, string> = {
   present: "bg-leaf/20 text-leaf",
@@ -23,6 +25,7 @@ export default function StudentDashboard() {
   const [subjects, setSubjects] = useState<StudentSubjectView[]>([]);
   const [attendance, setAttendance] = useState<StudentAttendanceEntry[]>([]);
   const [grades, setGrades] = useState<StudentGradeEntry[]>([]);
+  const [timetable, setTimetable] = useState<TimetableEntryView[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,12 +36,14 @@ export default function StudentDashboard() {
       getMyClassRequest(token),
       getMyAttendanceRequest(token),
       getMyGradesRequest(token),
+      getMyStudentTimetableRequest(token),
     ])
-      .then(([classData, attendanceData, gradesData]) => {
+      .then(([classData, attendanceData, gradesData, timetableData]) => {
         setClassInfo(classData.class);
         setSubjects(classData.subjects);
         setAttendance(attendanceData.attendance);
         setGrades(gradesData.grades);
+        setTimetable(timetableData.entries);
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong"))
       .finally(() => setIsLoading(false));
@@ -94,6 +99,27 @@ export default function StudentDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Timetable */}
+          <h2 className="mt-8 font-display text-lg font-semibold text-ink">My timetable</h2>
+          {timetable.length === 0 ? (
+            <p className="mt-2 font-body text-ink/60">No timetable has been set for your class yet.</p>
+          ) : (
+            <div className="mt-4">
+              <TimetableGrid
+                renderCell={(day, period) => {
+                  const entry = timetable.find((e) => e.dayOfWeek === day && e.period === period);
+                  if (!entry) return null;
+                  return (
+                    <div className="rounded-xl bg-sun-cream p-2">
+                      <p className="font-body text-xs font-bold text-ink">{entry.subjectName}</p>
+                      <p className="font-body text-xs text-ink/60">{entry.teacherName}</p>
+                    </div>
+                  );
+                }}
+              />
             </div>
           )}
 

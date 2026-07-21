@@ -5,6 +5,7 @@ import type {
   StudentAttendanceEntry,
   StudentGradeEntry,
 } from "../types/student";
+import type { TimetableEntryView } from "../types/timetable";
 
 export function getMyClassRequest(
   token: string
@@ -29,6 +30,15 @@ export function getMyAttendanceRequest(
 
 export function getMyGradesRequest(token: string): Promise<{ grades: StudentGradeEntry[] }> {
   return apiFetch<{ grades: StudentGradeEntry[] }>("/student/my-grades", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getMyStudentTimetableRequest(
+  token: string
+): Promise<{ entries: TimetableEntryView[] }> {
+  return apiFetch<{ entries: TimetableEntryView[] }>("/student/my-timetable", {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });

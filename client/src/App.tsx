@@ -17,9 +17,11 @@ import SubjectsList from "./pages/admin/SubjectsList";
 import ClassSubjects from "./pages/admin/ClassSubjects";
 import Enrollments from "./pages/admin/Enrollments";
 import ParentStudents from "./pages/admin/ParentStudents";
+import Timetable from "./pages/admin/Timetable";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import Attendance from "./pages/teacher/Attendance";
 import Grades from "./pages/teacher/Grades";
+import TeacherTimetable from "./pages/teacher/Timetable";
 import StudentDashboard from "./pages/student/Dashboard";
 import ParentDashboard from "./pages/parent/Dashboard";
 import Profile from "./pages/Profile";
@@ -115,6 +117,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/timetable"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <Timetable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/teacher"
           element={
             <ProtectedRoute allowedRole="teacher">
@@ -135,6 +145,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="teacher">
               <Grades />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/timetable"
+          element={
+            <ProtectedRoute allowedRole="teacher">
+              <TeacherTimetable />
             </ProtectedRoute>
           }
         />

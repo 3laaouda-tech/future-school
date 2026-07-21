@@ -7,6 +7,7 @@ import {
   getStudentAttendance,
   getStudentGrades,
 } from "../services/student.service";
+import { getTimetableForClass } from "../services/timetable.service";
 
 // ============================================
 // GET /api/student/my-class - Student only
@@ -43,4 +44,20 @@ export const getMyGrades = asyncHandler(async (req: Request, res: Response) => {
 
   const grades = await getStudentGrades(req.user.id);
   res.json({ grades });
+});
+
+// ============================================
+// GET /api/student/my-timetable - Student only
+// ============================================
+export const getMyTimetable = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError("Not authenticated", 401);
+
+  const classInfo = await getStudentClass(req.user.id);
+  if (!classInfo) {
+    res.json({ entries: [] });
+    return;
+  }
+
+  const entries = await getTimetableForClass(classInfo.classId);
+  res.json({ entries });
 });

@@ -6,6 +6,7 @@ import {
   postAttendance,
   getGrades,
   postGrade,
+  getMyTimetable,
 } from "../controllers/teacher.controller";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -28,5 +29,6 @@ router.post(
   authorize("teacher"),
   postGrade
 );
+router.get("/my-timetable", authenticate, authorize("teacher"), getMyTimetable);
 
 export default router;

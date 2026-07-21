@@ -1,3 +1,5 @@
+import type { TimetableEntryView } from "./timetable";
+
 export interface ChildView {
   studentId: number;
   studentName: string;
@@ -7,6 +9,7 @@ export interface ChildView {
 export interface ChildDetails {
   class: { classId: number; className: string; academicYear: string } | null;
   subjects: { subjectId: number; subjectName: string; teacherName: string }[];
+  timetable: TimetableEntryView[];
   attendance: { date: string; status: string }[];
   grades: {
     subjectName: string;

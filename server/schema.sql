@@ -123,6 +123,21 @@ CREATE TABLE grades (
 );
 
 -- ============================================
+-- 10. Timetable entries: which class_subject (teacher+subject+class)
+-- happens on which day and period. Period numbers/times are a fixed
+-- list defined in application code, not a database table.
+-- ============================================
+CREATE TABLE timetable_entries (
+    id SERIAL PRIMARY KEY,
+    class_subject_id INTEGER NOT NULL REFERENCES class_subjects(id) ON DELETE CASCADE,
+    day_of_week VARCHAR(10) NOT NULL CHECK (day_of_week IN ('sunday', 'monday', 'tuesday', 'wednesday', 'thursday')),
+    period INTEGER NOT NULL CHECK (period BETWEEN 1 AND 7),
+    UNIQUE (class_subject_id, day_of_week, period)
+);
+
+CREATE INDEX idx_timetable_class_subject ON timetable_entries(class_subject_id);
+
+-- ============================================
 -- Indexes to speed up common queries
 -- ============================================
 CREATE INDEX idx_users_role ON users(role);

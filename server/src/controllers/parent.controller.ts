@@ -8,6 +8,7 @@ import {
   getStudentAttendance,
   getStudentGrades,
 } from "../services/student.service";
+import { getTimetableForClass } from "../services/timetable.service";
 
 // ============================================
 // GET /api/parent/my-children - Parent only
@@ -36,8 +37,9 @@ export const getChildDetails = asyncHandler(async (req: Request, res: Response) 
 
   const classInfo = await getStudentClass(studentId);
   const subjects = classInfo ? await getSubjectsForClass(classInfo.classId) : [];
+  const timetable = classInfo ? await getTimetableForClass(classInfo.classId) : [];
   const attendance = await getStudentAttendance(studentId);
   const grades = await getStudentGrades(studentId);
 
-  res.json({ class: classInfo, subjects, attendance, grades });
+  res.json({ class: classInfo, subjects, timetable, attendance, grades });
 });

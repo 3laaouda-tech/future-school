@@ -14,6 +14,7 @@ import parentStudentRoutes from "./routes/parentStudent.routes";
 import parentRoutes from "./routes/parent.routes";
 import academicYearsRoutes from "./routes/academicYears.routes";
 import adminStatsRoutes from "./routes/adminStats.routes";
+import timetableRoutes from "./routes/timetable.routes";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/parent-students", parentStudentRoutes);
 app.use("/api/parent", parentRoutes);
 app.use("/api/academic-years", academicYearsRoutes);
 app.use("/api/admin-stats", adminStatsRoutes);
+app.use("/api/timetable", timetableRoutes);
 
 // error-handling middleware - must be registered last
 app.use(errorHandler);

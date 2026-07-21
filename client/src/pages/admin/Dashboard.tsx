@@ -33,6 +33,7 @@ const sections: Section[] = [
       { to: "/admin/classes", title: "Classes", description: "Create and manage classes", icon: "🏫" },
       { to: "/admin/subjects", title: "Subjects", description: "Create and manage subjects", icon: "📚" },
       { to: "/admin/class-subjects", title: "Assign teachers", description: "Assign a teacher to a subject in a class", icon: "🧑‍🏫" },
+      { to: "/admin/timetable", title: "Timetable", description: "Schedule subjects into weekly time slots", icon: "🗓️" },
     ],
   },
   {

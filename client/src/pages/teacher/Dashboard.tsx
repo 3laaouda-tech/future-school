@@ -23,7 +23,15 @@ export default function TeacherDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="font-display text-2xl font-semibold text-ink">My classes</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-semibold text-ink">My classes</h1>
+        <Link
+          to="/teacher/timetable"
+          className="rounded-full border-2 border-ink/10 bg-white px-5 py-2 font-body text-sm font-bold text-ink transition-transform hover:scale-105"
+        >
+          🗓️ My timetable
+        </Link>
+      </div>
 
       {isLoading && (
         <div className="mt-6 grid gap-4 md:grid-cols-2">

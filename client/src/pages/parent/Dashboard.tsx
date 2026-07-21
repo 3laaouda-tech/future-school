@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getMyChildrenRequest, getChildDetailsRequest } from "../../api/parentApi";
 import { ApiError } from "../../api/client";
 import { Skeleton, SkeletonCard } from "../../components/Skeleton";
+import TimetableGrid from "../../components/TimetableGrid";
 import type { ChildView, ChildDetails } from "../../types/parent";
 
 const statusColor: Record<string, string> = {
@@ -129,6 +130,29 @@ export default function ParentDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Timetable */}
+              <h2 className="mt-8 font-display text-lg font-semibold text-ink">Timetable</h2>
+              {details.timetable.length === 0 ? (
+                <p className="mt-2 font-body text-ink/60">No timetable has been set yet.</p>
+              ) : (
+                <div className="mt-4">
+                  <TimetableGrid
+                    renderCell={(day, period) => {
+                      const entry = details.timetable.find(
+                        (e) => e.dayOfWeek === day && e.period === period
+                      );
+                      if (!entry) return null;
+                      return (
+                        <div className="rounded-xl bg-sun-cream p-2">
+                          <p className="font-body text-xs font-bold text-ink">{entry.subjectName}</p>
+                          <p className="font-body text-xs text-ink/60">{entry.teacherName}</p>
+                        </div>
+                      );
+                    }}
+                  />
                 </div>
               )}
 
