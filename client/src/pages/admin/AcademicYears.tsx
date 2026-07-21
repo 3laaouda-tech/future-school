@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   getAcademicYearsRequest,
   createAcademicYearRequest,
@@ -13,12 +14,12 @@ import type { AcademicYear } from "../../types/academicYears";
 
 export default function AcademicYears() {
   const { token } = useAuth();
+  const { showToast } = useToast();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [label, setLabel] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
 
@@ -36,17 +37,17 @@ export default function AcademicYears() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
 
     setIsSubmitting(true);
     try {
       await createAcademicYearRequest(label, token);
+      showToast(`Academic year "${label}" was created.`);
       setLabel("");
       loadYears(token);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -58,8 +59,9 @@ export default function AcademicYears() {
     try {
       await setCurrentAcademicYearRequest(id, token);
       loadYears(token);
+      showToast("Current academic year updated.");
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setBusyId(null);
     }
@@ -74,8 +76,9 @@ export default function AcademicYears() {
     try {
       await deleteAcademicYearRequest(id, token);
       setYears((prev) => prev.filter((y) => y.id !== id));
+      showToast(`Academic year "${label}" was deleted.`);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setBusyId(null);
     }
@@ -119,7 +122,6 @@ export default function AcademicYears() {
           {isSubmitting ? "Adding..." : "+ Add"}
         </button>
       </form>
-      {formError && <p className="mt-2 font-body text-sm font-semibold text-coral">{formError}</p>}
 
       {/* Academic years list */}
       <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">

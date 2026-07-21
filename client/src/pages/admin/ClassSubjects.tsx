@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { getClassesRequest } from "../../api/classesApi";
 import { getSubjectsRequest } from "../../api/subjectsApi";
 import { getUsersRequest } from "../../api/usersApi";
@@ -14,6 +15,7 @@ import type { ClassSubjectView } from "../../types/classSubjects";
 
 export default function ClassSubjects() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -25,7 +27,6 @@ export default function ClassSubjects() {
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [teacherId, setTeacherId] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function loadAll(currentToken: string) {
@@ -52,11 +53,10 @@ export default function ClassSubjects() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
     if (!classId || !subjectId || !teacherId) {
-      setFormError("Please select a class, a subject, and a teacher.");
+      showToast("Please select a class, a subject, and a teacher.", "error");
       return;
     }
 
@@ -70,8 +70,9 @@ export default function ClassSubjects() {
       setSubjectId("");
       setTeacherId("");
       loadAll(token);
+      showToast("Teacher assigned.");
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -166,12 +167,6 @@ export default function ClassSubjects() {
               >
                 {isSubmitting ? "Assigning..." : "+ Assign"}
               </button>
-
-              {formError && (
-                <p className="font-body text-sm font-semibold text-coral md:col-span-4">
-                  {formError}
-                </p>
-              )}
             </form>
           )}
 

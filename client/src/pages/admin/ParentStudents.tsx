@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { getUsersRequest } from "../../api/usersApi";
 import { getParentStudentsRequest, createParentStudentRequest } from "../../api/parentStudentApi";
 import { ApiError } from "../../api/client";
@@ -16,6 +17,7 @@ const relationshipOptions: { value: Relationship; label: string }[] = [
 
 export default function ParentStudents() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [parents, setParents] = useState<User[]>([]);
   const [students, setStudents] = useState<User[]>([]);
@@ -26,7 +28,6 @@ export default function ParentStudents() {
   const [parentId, setParentId] = useState("");
   const [studentId, setStudentId] = useState("");
   const [relationship, setRelationship] = useState<Relationship>("father");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function loadAll(currentToken: string) {
@@ -47,11 +48,10 @@ export default function ParentStudents() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
     if (!parentId || !studentId) {
-      setFormError("Please select a parent and a student.");
+      showToast("Please select a parent and a student.", "error");
       return;
     }
 
@@ -65,8 +65,9 @@ export default function ParentStudents() {
       setStudentId("");
       setRelationship("father");
       loadAll(token);
+      showToast("Parent linked to student.");
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -156,12 +157,6 @@ export default function ParentStudents() {
               >
                 {isSubmitting ? "Linking..." : "+ Link"}
               </button>
-
-              {formError && (
-                <p className="font-body text-sm font-semibold text-coral md:col-span-4">
-                  {formError}
-                </p>
-              )}
             </form>
           )}
 

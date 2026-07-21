@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   getClassesRequest,
   createClassRequest,
@@ -23,16 +24,15 @@ interface ClassRowProps {
 }
 
 function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowProps) {
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(cls.name);
   const [gradeLevel, setGradeLevel] = useState(cls.gradeLevel);
   const [academicYearId, setAcademicYearId] = useState(String(cls.academicYearId));
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleSave() {
-    setError(null);
     setIsSaving(true);
     try {
       const { class: updated } = await updateClassRequest(
@@ -42,8 +42,9 @@ function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowP
       );
       onUpdated(updated);
       setIsEditing(false);
+      showToast(`${updated.name} was updated.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
@@ -59,8 +60,9 @@ function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowP
     try {
       await deleteClassRequest(cls.id, token);
       onDeleted(cls.id);
+      showToast(`"${cls.name}" was deleted.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
       setIsDeleting(false);
     }
   }
@@ -111,7 +113,6 @@ function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowP
                   setName(cls.name);
                   setGradeLevel(cls.gradeLevel);
                   setAcademicYearId(String(cls.academicYearId));
-                  setError(null);
                 }}
                 className="rounded-full border-2 border-ink/10 px-4 py-1.5 font-body text-sm font-bold text-ink"
               >
@@ -119,7 +120,6 @@ function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowP
               </button>
             </div>
           </div>
-          {error && <p className="mt-2 font-body text-sm font-semibold text-coral">{error}</p>}
         </td>
       </tr>
     );
@@ -151,6 +151,7 @@ function ClassRow({ cls, token, academicYears, onUpdated, onDeleted }: ClassRowP
 
 export default function ClassesList() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
@@ -160,7 +161,6 @@ export default function ClassesList() {
   const [name, setName] = useState("");
   const [gradeLevel, setGradeLevel] = useState<string>(gradeLevels[0]);
   const [academicYearId, setAcademicYearId] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -184,11 +184,10 @@ export default function ClassesList() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
     if (!academicYearId) {
-      setFormError("Please add an academic year first.");
+      showToast("Please add an academic year first.", "error");
       return;
     }
 
@@ -201,8 +200,9 @@ export default function ClassesList() {
       setName("");
       setGradeLevel(gradeLevels[0]);
       loadAll(token);
+      showToast(`"${name}" was created.`);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -307,10 +307,6 @@ export default function ClassesList() {
           >
             {isSubmitting ? "Adding..." : "+ Add class"}
           </button>
-
-          {formError && (
-            <p className="font-body text-sm font-semibold text-coral md:col-span-4">{formError}</p>
-          )}
         </form>
       )}
 

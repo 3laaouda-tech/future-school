@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   getClassStudentsRequest,
   getAttendanceRequest,
@@ -30,6 +31,7 @@ function todayIso(): string {
 export default function Attendance() {
   const { classId } = useParams<{ classId: string }>();
   const { token } = useAuth();
+  const { showToast } = useToast();
   const numericClassId = Number(classId);
 
   const [date, setDate] = useState(todayIso());
@@ -38,7 +40,6 @@ export default function Attendance() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   // Load the class roster once
   useEffect(() => {
@@ -54,7 +55,6 @@ export default function Attendance() {
     if (!token || !numericClassId || students.length === 0) return;
 
     setIsLoading(true);
-    setSavedMessage(null);
     getAttendanceRequest(numericClassId, date, token)
       .then((data) => {
         const existing: Record<number, AttendanceStatus> = {};
@@ -74,15 +74,13 @@ export default function Attendance() {
   async function handleSave() {
     if (!token) return;
     setIsSaving(true);
-    setSavedMessage(null);
-    setError(null);
 
     try {
       const records = students.map((s) => ({ studentId: s.id, status: statuses[s.id] }));
       await submitAttendanceRequest(numericClassId, date, records, token);
-      setSavedMessage("Attendance saved.");
+      showToast("Attendance saved.");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
@@ -153,9 +151,6 @@ export default function Attendance() {
             >
               {isSaving ? "Saving..." : "Save attendance"}
             </button>
-            {savedMessage && (
-              <p className="font-body text-sm font-semibold text-leaf">{savedMessage}</p>
-            )}
           </div>
         </>
       )}

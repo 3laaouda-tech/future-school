@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { getUsersRequest, updateUserRequest, deleteUserRequest } from "../../api/usersApi";
 import { ApiError } from "../../api/client";
 import type { User } from "../../types/auth";
@@ -20,16 +21,15 @@ interface UserRowProps {
 }
 
 function UserRow({ user, token, onUpdated, onDeleted }: UserRowProps) {
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState(user.fullName);
   const [email, setEmail] = useState(user.email);
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleSave() {
-    setError(null);
     setIsSaving(true);
     try {
       const payload = password
@@ -39,8 +39,9 @@ function UserRow({ user, token, onUpdated, onDeleted }: UserRowProps) {
       onUpdated(updated);
       setIsEditing(false);
       setPassword("");
+      showToast(`${updated.fullName} was updated.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
@@ -54,8 +55,9 @@ function UserRow({ user, token, onUpdated, onDeleted }: UserRowProps) {
     try {
       await deleteUserRequest(user.id, token);
       onDeleted(user.id);
+      showToast(`${user.fullName} was deleted.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
       setIsDeleting(false);
     }
   }
@@ -107,7 +109,6 @@ function UserRow({ user, token, onUpdated, onDeleted }: UserRowProps) {
                   setFullName(user.fullName);
                   setEmail(user.email);
                   setPassword("");
-                  setError(null);
                 }}
                 className="rounded-full border-2 border-ink/10 px-4 py-1.5 font-body text-sm font-bold text-ink"
               >
@@ -115,7 +116,6 @@ function UserRow({ user, token, onUpdated, onDeleted }: UserRowProps) {
               </button>
             </div>
           </div>
-          {error && <p className="mt-2 font-body text-sm font-semibold text-coral">{error}</p>}
         </td>
       </tr>
     );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { getClassesRequest } from "../../api/classesApi";
 import { getUsersRequest } from "../../api/usersApi";
 import { getEnrollmentsRequest, createEnrollmentRequest } from "../../api/enrollmentsApi";
@@ -14,6 +15,7 @@ import type { AcademicYear } from "../../types/academicYears";
 
 export default function Enrollments() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [students, setStudents] = useState<User[]>([]);
@@ -25,7 +27,6 @@ export default function Enrollments() {
   const [studentId, setStudentId] = useState("");
   const [classId, setClassId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function loadAll(currentToken: string) {
@@ -54,11 +55,10 @@ export default function Enrollments() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
     if (!studentId || !classId || !academicYearId) {
-      setFormError("Please fill in all fields.");
+      showToast("Please fill in all fields.", "error");
       return;
     }
 
@@ -71,8 +71,9 @@ export default function Enrollments() {
       setStudentId("");
       setClassId("");
       loadAll(token);
+      showToast("Student enrolled.");
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -166,12 +167,6 @@ export default function Enrollments() {
               >
                 {isSubmitting ? "Enrolling..." : "+ Enroll"}
               </button>
-
-              {formError && (
-                <p className="font-body text-sm font-semibold text-coral md:col-span-4">
-                  {formError}
-                </p>
-              )}
             </form>
           )}
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { getClassStudentsRequest } from "../../api/attendanceApi";
 import { getGradesRequest, submitGradeRequest } from "../../api/gradesApi";
 import { ApiError } from "../../api/client";
@@ -12,6 +13,7 @@ import type { GradeView } from "../../types/grades";
 export default function Grades() {
   const { classId, subjectId } = useParams<{ classId: string; subjectId: string }>();
   const { token } = useAuth();
+  const { showToast } = useToast();
   const numericClassId = Number(classId);
   const numericSubjectId = Number(subjectId);
 
@@ -25,7 +27,6 @@ export default function Grades() {
   const [assessmentType, setAssessmentType] = useState<string>(assessmentTypes[0]);
   const [score, setScore] = useState("");
   const [maxScore, setMaxScore] = useState("100");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function loadGrades(currentToken: string) {
@@ -52,11 +53,10 @@ export default function Grades() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
     if (!studentId || !term || !assessmentType || !score) {
-      setFormError("Please fill in all fields.");
+      showToast("Please fill in all fields.", "error");
       return;
     }
 
@@ -80,8 +80,9 @@ export default function Grades() {
       setScore("");
       setMaxScore("100");
       loadGrades(token);
+      showToast("Grade added.");
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,12 +199,6 @@ export default function Grades() {
               >
                 {isSubmitting ? "Saving..." : "+ Add grade"}
               </button>
-
-              {formError && (
-                <p className="font-body text-sm font-semibold text-coral md:col-span-3">
-                  {formError}
-                </p>
-              )}
             </form>
           )}
 

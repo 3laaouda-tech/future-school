@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { createUserRequest } from "../../api/usersApi";
 import { ApiError } from "../../api/client";
 import type { UserRole } from "../../types/auth";
@@ -15,35 +16,32 @@ const roleOptions: { value: UserRole; label: string }[] = [
 
 export default function AddUser() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("teacher");
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSuccessMessage(null);
 
     if (!token) {
-      setError("You must be logged in as an admin to add a user.");
+      showToast("You must be logged in as an admin to add a user.", "error");
       return;
     }
 
     setIsSubmitting(true);
     try {
       const { user } = await createUserRequest({ fullName, email, password, role }, token);
-      setSuccessMessage(`${user.fullName} was added as ${user.role}.`);
+      showToast(`${user.fullName} was added as ${user.role}.`);
       setFullName("");
       setEmail("");
       setPassword("");
       setRole("teacher");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,11 +125,6 @@ export default function AddUser() {
               </select>
             </div>
           </div>
-
-          {error && <p className="mt-4 text-sm font-semibold text-coral">{error}</p>}
-          {successMessage && (
-            <p className="mt-4 text-sm font-semibold text-leaf">{successMessage}</p>
-          )}
 
           <button
             type="submit"

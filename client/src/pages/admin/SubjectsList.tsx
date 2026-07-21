@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   getSubjectsRequest,
   createSubjectRequest,
@@ -19,21 +20,21 @@ interface SubjectRowProps {
 }
 
 function SubjectRow({ subject, token, onUpdated, onDeleted }: SubjectRowProps) {
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(subject.name);
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleSave() {
-    setError(null);
     setIsSaving(true);
     try {
       const { subject: updated } = await updateSubjectRequest(subject.id, name, token);
       onUpdated(updated);
       setIsEditing(false);
+      showToast(`"${updated.name}" was updated.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
@@ -49,8 +50,9 @@ function SubjectRow({ subject, token, onUpdated, onDeleted }: SubjectRowProps) {
     try {
       await deleteSubjectRequest(subject.id, token);
       onDeleted(subject.id);
+      showToast(`"${subject.name}" was deleted.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
       setIsDeleting(false);
     }
   }
@@ -74,13 +76,11 @@ function SubjectRow({ subject, token, onUpdated, onDeleted }: SubjectRowProps) {
           onClick={() => {
             setIsEditing(false);
             setName(subject.name);
-            setError(null);
           }}
           className="rounded-full border-2 border-ink/10 px-4 py-1.5 font-body text-sm font-bold text-ink"
         >
           Cancel
         </button>
-        {error && <p className="font-body text-sm font-semibold text-coral">{error}</p>}
       </li>
     );
   }
@@ -109,13 +109,13 @@ function SubjectRow({ subject, token, onUpdated, onDeleted }: SubjectRowProps) {
 
 export default function SubjectsList() {
   const { token } = useAuth();
+  const { showToast } = useToast();
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -133,17 +133,17 @@ export default function SubjectsList() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setFormError(null);
 
     if (!token) return;
 
     setIsSubmitting(true);
     try {
       await createSubjectRequest(name, token);
+      showToast(`"${name}" was created.`);
       setName("");
       loadSubjects(token);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Something went wrong");
+      showToast(err instanceof ApiError ? err.message : "Something went wrong", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -196,7 +196,6 @@ export default function SubjectsList() {
           {isSubmitting ? "Adding..." : "+ Add subject"}
         </button>
       </form>
-      {formError && <p className="mt-2 font-body text-sm font-semibold text-coral">{formError}</p>}
 
       {/* Subjects list */}
       <input
