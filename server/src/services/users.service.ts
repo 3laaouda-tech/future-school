@@ -14,6 +14,14 @@ export async function listUsers(): Promise<Omit<UserRecord, "password_hash">[]> 
   return result.rows;
 }
 
+export async function getUserById(id: number): Promise<Omit<UserRecord, "password_hash"> | null> {
+  const result = await pool.query<Omit<UserRecord, "password_hash">>(
+    `SELECT id, full_name, email, role, created_at FROM users WHERE id = $1`,
+    [id]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function updateUser(
   id: number,
   input: UpdateUserInput

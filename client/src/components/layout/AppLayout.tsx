@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import type { UserRole } from "../../types/auth";
 import Logo from "../Logo";
@@ -32,14 +32,14 @@ export default function AppLayout() {
 
           {user && (
             <div className="flex items-center gap-4">
-              <div className="text-right">
+              <Link to="/profile" className="text-right transition-opacity hover:opacity-70">
                 <p className="font-body text-sm font-semibold text-ink">{user.fullName}</p>
                 <span
                   className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold capitalize ${roleBadgeColor[user.role]}`}
                 >
                   {user.role}
                 </span>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="rounded-full border-2 border-ink/10 px-4 py-2 font-body text-sm font-bold text-ink transition-transform hover:scale-105"

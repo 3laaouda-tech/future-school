@@ -9,6 +9,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -43,12 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  // Called after a successful profile edit, so the navbar and any other
+  // place reading `user` reflects the change immediately without a
+  // full login/logout cycle.
+  function updateUser(updated: User): void {
+    localStorage.setItem("auth_user", JSON.stringify(updated));
+    setUser(updated);
+  }
+
   const value: AuthContextValue = {
     user,
     token,
     isAuthenticated: user !== null && token !== null,
     login,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

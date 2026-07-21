@@ -44,6 +44,24 @@ export function updateUserRequest(
   });
 }
 
+export function getMeRequest(token: string): Promise<{ user: User }> {
+  return apiFetch<{ user: User }>("/users/me", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateMeRequest(
+  payload: UpdateUserPayload,
+  token: string
+): Promise<{ user: User }> {
+  return apiFetch<{ user: User }>("/users/me", {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deleteUserRequest(id: number, token: string): Promise<{ success: boolean }> {
   return apiFetch<{ success: boolean }>(`/users/${id}`, {
     method: "DELETE",

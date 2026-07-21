@@ -22,6 +22,8 @@ import Attendance from "./pages/teacher/Attendance";
 import Grades from "./pages/teacher/Grades";
 import StudentDashboard from "./pages/student/Dashboard";
 import ParentDashboard from "./pages/parent/Dashboard";
+import Profile from "./pages/Profile";
+import RequireAuth from "./components/RequireAuth";
 
 function App() {
   return (
@@ -150,6 +152,14 @@ function App() {
             <ProtectedRoute allowedRole="parent">
               <ParentDashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <Profile />
+            </RequireAuth>
           }
         />
       </Route>
