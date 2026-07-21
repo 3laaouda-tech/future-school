@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMyClassRequest, getMyAttendanceRequest, getMyGradesRequest } from "../../api/studentApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonCard } from "../../components/Skeleton";
 import type {
   StudentClassInfo,
   StudentSubjectView,
@@ -47,7 +48,15 @@ export default function StudentDashboard() {
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="font-display text-2xl font-semibold text-ink">My class</h1>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <div className="mt-6 space-y-6">
+          <SkeletonCard />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+          </div>
+        </div>
+      )}
       {error && <p className="mt-6 font-body text-coral">{error}</p>}
 
       {!isLoading && !error && !classInfo && (

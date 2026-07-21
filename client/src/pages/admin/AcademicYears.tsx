@@ -10,6 +10,7 @@ import {
   deleteAcademicYearRequest,
 } from "../../api/academicYearsApi";
 import { ApiError } from "../../api/client";
+import { SkeletonListItem } from "../../components/Skeleton";
 import type { AcademicYear } from "../../types/academicYears";
 
 export default function AcademicYears() {
@@ -125,7 +126,13 @@ export default function AcademicYears() {
 
       {/* Academic years list */}
       <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">
-        {isLoading && <p className="p-6 font-body text-ink/60">Loading...</p>}
+        {isLoading && (
+          <ul className="divide-y divide-ink/5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonListItem key={i} />
+            ))}
+          </ul>
+        )}
         {loadError && <p className="p-6 font-body text-coral">{loadError}</p>}
 
         {!isLoading && !loadError && years.length === 0 && (

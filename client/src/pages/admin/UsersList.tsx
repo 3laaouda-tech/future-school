@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { getUsersRequest, updateUserRequest, deleteUserRequest } from "../../api/usersApi";
 import { ApiError } from "../../api/client";
+import { SkeletonRow } from "../../components/Skeleton";
 import type { User } from "../../types/auth";
 
 const roleBadgeColor: Record<User["role"], string> = {
@@ -207,7 +208,23 @@ export default function UsersList() {
       />
 
       <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
-        {isLoading && <p className="p-6 font-body text-ink/60">Loading users...</p>}
+        {isLoading && (
+          <table className="w-full text-left font-body">
+            <thead className="bg-sun-cream text-sm text-ink/60">
+              <tr>
+                <th className="px-6 py-3">Name</th>
+                <th className="px-6 py-3">Email</th>
+                <th className="px-6 py-3">Role</th>
+                <th className="px-6 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonRow key={i} columns={4} />
+              ))}
+            </tbody>
+          </table>
+        )}
         {error && <p className="p-6 font-body text-coral">{error}</p>}
 
         {!isLoading && !error && filteredUsers.length === 0 && (

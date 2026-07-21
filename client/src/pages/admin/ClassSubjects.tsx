@@ -8,6 +8,7 @@ import { getSubjectsRequest } from "../../api/subjectsApi";
 import { getUsersRequest } from "../../api/usersApi";
 import { getClassSubjectsRequest, createClassSubjectRequest } from "../../api/classSubjectsApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonRow } from "../../components/Skeleton";
 import type { SchoolClass } from "../../types/classes";
 import type { Subject } from "../../types/subjects";
 import type { User } from "../../types/auth";
@@ -88,7 +89,22 @@ export default function ClassSubjects() {
         Assign a teacher to teach a subject in a specific class.
       </p>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <>
+          <div className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10" />
+            ))}
+          </div>
+          <table className="mt-6 w-full overflow-hidden rounded-3xl bg-white text-left font-body shadow-sm">
+            <tbody>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonRow key={i} columns={3} />
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       {loadError && <p className="mt-6 font-body text-coral">{loadError}</p>}
 
       {!isLoading && !loadError && (

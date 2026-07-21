@@ -11,6 +11,7 @@ import {
 } from "../../api/classesApi";
 import { getAcademicYearsRequest } from "../../api/academicYearsApi";
 import { ApiError } from "../../api/client";
+import { SkeletonRow } from "../../components/Skeleton";
 import { gradeLevels } from "../../constants";
 import type { SchoolClass } from "../../types/classes";
 import type { AcademicYear } from "../../types/academicYears";
@@ -320,7 +321,23 @@ export default function ClassesList() {
       />
 
       <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
-        {isLoading && <p className="p-6 font-body text-ink/60">Loading classes...</p>}
+        {isLoading && (
+          <table className="w-full text-left font-body">
+            <thead className="bg-sun-cream text-sm text-ink/60">
+              <tr>
+                <th className="px-6 py-3">Name</th>
+                <th className="px-6 py-3">Grade level</th>
+                <th className="px-6 py-3">Academic year</th>
+                <th className="px-6 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonRow key={i} columns={4} />
+              ))}
+            </tbody>
+          </table>
+        )}
         {loadError && <p className="p-6 font-body text-coral">{loadError}</p>}
 
         {!isLoading && !loadError && filteredClasses.length === 0 && (

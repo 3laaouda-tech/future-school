@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import { getUsersRequest } from "../../api/usersApi";
 import { getParentStudentsRequest, createParentStudentRequest } from "../../api/parentStudentApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonRow } from "../../components/Skeleton";
 import type { User } from "../../types/auth";
 import type { ParentStudentView, Relationship } from "../../types/parentStudent";
 
@@ -80,7 +81,22 @@ export default function ParentStudents() {
       </Link>
       <h1 className="mt-2 font-display text-2xl font-semibold text-ink">Link parents to students</h1>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <>
+          <div className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10" />
+            ))}
+          </div>
+          <table className="mt-6 w-full overflow-hidden rounded-3xl bg-white text-left font-body shadow-sm">
+            <tbody>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonRow key={i} columns={3} />
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       {loadError && <p className="mt-6 font-body text-coral">{loadError}</p>}
 
       {!isLoading && !loadError && (

@@ -10,6 +10,7 @@ import {
   deleteSubjectRequest,
 } from "../../api/subjectsApi";
 import { ApiError } from "../../api/client";
+import { SkeletonListItem } from "../../components/Skeleton";
 import type { Subject } from "../../types/subjects";
 
 interface SubjectRowProps {
@@ -207,7 +208,13 @@ export default function SubjectsList() {
       />
 
       <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
-        {isLoading && <p className="p-6 font-body text-ink/60">Loading subjects...</p>}
+        {isLoading && (
+          <ul className="divide-y divide-ink/5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonListItem key={i} />
+            ))}
+          </ul>
+        )}
         {loadError && <p className="p-6 font-body text-coral">{loadError}</p>}
 
         {!isLoading && !loadError && filteredSubjects.length === 0 && (

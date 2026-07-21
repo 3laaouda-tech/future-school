@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getMyClassesRequest } from "../../api/teacherApi";
 import { ApiError } from "../../api/client";
+import { SkeletonCard } from "../../components/Skeleton";
 import type { TeacherClass } from "../../types/teacher";
 
 export default function TeacherDashboard() {
@@ -24,7 +25,13 @@ export default function TeacherDashboard() {
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="font-display text-2xl font-semibold text-ink">My classes</h1>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading your classes...</p>}
+      {isLoading && (
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      )}
       {error && <p className="mt-6 font-body text-coral">{error}</p>}
 
       {!isLoading && !error && classes.length === 0 && (

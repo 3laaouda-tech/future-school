@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import { getClassStudentsRequest } from "../../api/attendanceApi";
 import { getGradesRequest, submitGradeRequest } from "../../api/gradesApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonRow } from "../../components/Skeleton";
 import { terms, assessmentTypes } from "../../constants";
 import type { StudentInClass } from "../../types/attendance";
 import type { GradeView } from "../../types/grades";
@@ -95,7 +96,22 @@ export default function Grades() {
       </Link>
       <h1 className="mt-2 font-display text-2xl font-semibold text-ink">Enter grades</h1>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <>
+          <div className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10" />
+            ))}
+          </div>
+          <table className="mt-6 w-full overflow-hidden rounded-3xl bg-white text-left font-body shadow-sm">
+            <tbody>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonRow key={i} columns={4} />
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       {error && <p className="mt-6 font-body text-coral">{error}</p>}
 
       {!isLoading && !error && (

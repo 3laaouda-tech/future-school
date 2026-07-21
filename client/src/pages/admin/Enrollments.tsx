@@ -8,6 +8,7 @@ import { getUsersRequest } from "../../api/usersApi";
 import { getEnrollmentsRequest, createEnrollmentRequest } from "../../api/enrollmentsApi";
 import { getAcademicYearsRequest } from "../../api/academicYearsApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonRow } from "../../components/Skeleton";
 import type { SchoolClass } from "../../types/classes";
 import type { User } from "../../types/auth";
 import type { EnrollmentView } from "../../types/enrollments";
@@ -89,7 +90,22 @@ export default function Enrollments() {
         Assign a student to a class for a given academic year.
       </p>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <>
+          <div className="mt-6 grid gap-4 rounded-3xl bg-white p-6 shadow-sm md:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10" />
+            ))}
+          </div>
+          <table className="mt-6 w-full overflow-hidden rounded-3xl bg-white text-left font-body shadow-sm">
+            <tbody>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonRow key={i} columns={3} />
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       {loadError && <p className="mt-6 font-body text-coral">{loadError}</p>}
 
       {!isLoading && !loadError && (

@@ -8,6 +8,7 @@ import {
   submitAttendanceRequest,
 } from "../../api/attendanceApi";
 import { ApiError } from "../../api/client";
+import { Skeleton } from "../../components/Skeleton";
 import type { StudentInClass, AttendanceStatus } from "../../types/attendance";
 
 const statusOptions: { value: AttendanceStatus; label: string }[] = [
@@ -106,7 +107,16 @@ export default function Attendance() {
         />
       </div>
 
-      {isLoading && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoading && (
+        <div className="mt-6 divide-y divide-ink/5 overflow-hidden rounded-3xl bg-white shadow-sm">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between px-6 py-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+          ))}
+        </div>
+      )}
       {error && <p className="mt-6 font-body text-coral">{error}</p>}
 
       {!isLoading && !error && students.length === 0 && (

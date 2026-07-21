@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMyChildrenRequest, getChildDetailsRequest } from "../../api/parentApi";
 import { ApiError } from "../../api/client";
+import { Skeleton, SkeletonCard } from "../../components/Skeleton";
 import type { ChildView, ChildDetails } from "../../types/parent";
 
 const statusColor: Record<string, string> = {
@@ -44,7 +45,13 @@ export default function ParentDashboard() {
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="font-display text-2xl font-semibold text-ink">My children</h1>
 
-      {isLoadingChildren && <p className="mt-6 font-body text-ink/60">Loading...</p>}
+      {isLoadingChildren && (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-28 rounded-full" />
+          ))}
+        </div>
+      )}
       {error && <p className="mt-6 font-body text-coral">{error}</p>}
 
       {!isLoadingChildren && !error && children.length === 0 && (
@@ -75,7 +82,15 @@ export default function ParentDashboard() {
             ))}
           </div>
 
-          {isLoadingDetails && <p className="mt-6 font-body text-ink/60">Loading details...</p>}
+          {isLoadingDetails && (
+            <div className="mt-6 space-y-6">
+              <SkeletonCard />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+              </div>
+            </div>
+          )}
 
           {!isLoadingDetails && details && (
             <>
