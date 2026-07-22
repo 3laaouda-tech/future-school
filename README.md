@@ -48,17 +48,19 @@ future-school/
 │   └── src/
 │       ├── api/                 One file per backend resource; wraps fetch calls
 │       ├── components/
-│       │   └── layout/          Navbar, Footer, PublicLayout, AppLayout
-│       ├── context/              AuthContext (login state, token, current user)
+│       │   ├── layout/          Navbar, Footer, PublicLayout, AppLayout
+│       │   ├── Logo.tsx, Skeleton.tsx, TimetableGrid.tsx, ProtectedRoute.tsx, RequireAuth.tsx
+│       ├── context/              AuthContext, ToastContext, ThemeContext
 │       ├── pages/
-│       │   ├── public/           Home, About, Contact
+│       │   ├── public/           Home, About, Contact, Documentation, HowToWork
 │       │   ├── auth/             Login
-│       │   ├── admin/            All Admin screens
-│       │   ├── teacher/          Teacher dashboard, Attendance, Grades
-│       │   ├── student/          Student dashboard
-│       │   └── parent/           Parent dashboard
+│       │   ├── admin/            All Admin screens (users, academics, family, timetable, stats)
+│       │   ├── teacher/          Dashboard, Attendance, Grades, Timetable
+│       │   ├── student/          Dashboard (class, subjects, timetable, attendance, grades)
+│       │   ├── parent/           Dashboard (per-child view)
+│       │   └── Profile.tsx       Shared "My Profile" page for every role
 │       ├── types/                 TypeScript types, one file per resource
-│       └── constants.ts           Shared fixed dropdown values (grade levels, terms...)
+│       └── constants.ts           Shared fixed dropdown values (grade levels, terms, days, periods...)
 │
 └── server/                       Express + TypeScript backend
     ├── schema.sql                 Full database schema (run this first)
@@ -83,13 +85,16 @@ queries.
 **Frontend data flow:** a page calls a function from `api/`, which calls the
 shared `apiFetch` helper in `api/client.ts` (adds the JSON header, parses the
 response, throws a typed `ApiError` on failure). Pages read the current user
-and JWT from `AuthContext` via the `useAuth()` hook.
+and JWT from `AuthContext` via the `useAuth()` hook. Action feedback (success/
+error) goes through `ToastContext` (`useToast()`) instead of inline banners.
+Dark/light mode is handled by `ThemeContext` (`useTheme()`), which toggles a
+`.dark` class on `<html>` and persists the choice in `localStorage`.
 
 ---
 
 ## Database schema
 
-10 tables, no ORM — see [`server/schema.sql`](server/schema.sql) for the full
+11 tables, no ORM — see [`server/schema.sql`](server/schema.sql) for the full
 definition with constraints and indexes. High-level relationships:
 
 ```
@@ -98,6 +103,7 @@ users (role: admin | teacher | student | parent)
  │
  ├── classes ── academic_years            (class belongs to one academic year)
  │     └── class_subjects ── subjects      (subject + teacher assigned to a class)
+ │            └── timetable_entries         (day + period slot for that assignment)
  │
  ├── enrollments                          (student ↔ class, per academic year)
  ├── parent_student                       (parent ↔ student, many-to-many)
@@ -114,38 +120,54 @@ Notable design decisions:
   key. Deleting an academic year still in use is blocked (`ON DELETE
   RESTRICT`) rather than silently cascading.
 - **Fixed-choice fields use SQL `CHECK` constraints + Zod enums**, not free
-  text: `role`, `attendance.status`, `grade_level`, `term`, and
-  `assessment_type` all come from a closed list on both the frontend
-  (`<select>`) and backend (`z.enum`).
+  text: `role`, `attendance.status`, `grade_level`, `term`, `assessment_type`,
+  and timetable `day_of_week`/`period` all come from a closed list on both
+  the frontend (`<select>`) and backend (`z.enum`). Period *times* (e.g.
+  "08:00–08:45") are a fixed list in application code, not a database table.
+- **Timetable conflict checking happens in the service layer**: before
+  scheduling a class_subject into a day/period slot, the backend checks that
+  neither the class nor the teacher already has something else at that time,
+  and rejects the request with a clear error if so.
 - Deleting a `class` or `subject` cascades to its related
-  `class_subjects`, `enrollments`, `attendance`, and `grades` rows
-  (`ON DELETE CASCADE`) — the UI warns about this before confirming a delete.
+  `class_subjects`, `enrollments`, `attendance`, `grades`, and
+  `timetable_entries` rows (`ON DELETE CASCADE`) — the UI warns about this
+  before confirming a delete.
 
 ---
 
 ## Features by role
 
 **Admin**
-- Add / view / edit / delete users (any role)
+- Add / view / edit / delete user accounts (any role), with search, role
+  filter, sortable columns, pagination, and multi-select bulk delete
 - Manage academic years (add, mark one as current, delete)
 - Manage classes and subjects (create, edit, delete, search)
 - Assign a teacher to teach a subject in a class
+- Build a weekly timetable per class (day/period grid, conflict-checked)
 - Enroll students into a class for an academic year
 - Link parents to their children
+- Dashboard overview with live counts (students, teachers, parents, classes,
+  subjects, enrollments)
 
 **Teacher**
 - See the classes/subjects they're assigned to
+- See their own weekly timetable
 - Take attendance for a class (present / absent / late / excused), re-editable per date
 - Enter grades for a student in a subject (term, assessment type, score)
 
 **Student**
 - See their class, subjects, and teachers
+- See their own weekly timetable
 - See their own attendance history
 - See their own grades
 
 **Parent**
-- See a list of their linked children
-- For each child: class, subjects, attendance, and grades (read-only)
+- See a list of their linked children (switch between them if there's more than one)
+- For each child: class, subjects, timetable, attendance, and grades (read-only)
+
+**Every role**
+- Edit their own profile (name, email, password) from "My Profile"
+- Toggle dark/light mode (preference saved across visits)
 
 ---
 
@@ -160,8 +182,11 @@ requires a `Authorization: Bearer <token>` header. `GET /health` (outside
 | `POST /auth/login` | — (public) | Log in, returns a JWT + user |
 | `POST /auth/register` | admin | Create a new user account |
 | `GET /users` | admin | List all users |
-| `PUT /users/:id` | admin | Update a user's name/email/password |
+| `PUT /users/:id` | admin | Update any user's name/email/password |
 | `DELETE /users/:id` | admin | Delete a user |
+| `GET /users/me` | any | Get my own profile |
+| `PUT /users/me` | any | Update my own name/email/password |
+| `GET /admin-stats` | admin | Dashboard counts (students, teachers, classes...) |
 | `GET /academic-years` | admin | List academic years |
 | `POST /academic-years` | admin | Create an academic year |
 | `PUT /academic-years/:id/set-current` | admin | Mark one year as current |
@@ -176,21 +201,26 @@ requires a `Authorization: Bearer <token>` header. `GET /health` (outside
 | `DELETE /subjects/:id` | admin | Delete a subject |
 | `GET /class-subjects` | admin | List all teacher assignments |
 | `POST /class-subjects` | admin | Assign a teacher to a subject in a class |
+| `GET /timetable?classId=` | admin | Get the weekly timetable for a class |
+| `POST /timetable` | admin | Schedule a class_subject into a day/period slot |
+| `DELETE /timetable/:id` | admin | Clear a scheduled slot |
 | `GET /enrollments` | admin | List all enrollments |
 | `POST /enrollments` | admin | Enroll a student in a class |
 | `GET /parent-students` | admin | List parent-child links |
 | `POST /parent-students` | admin | Link a parent to a student |
 | `GET /teacher/my-classes` | teacher | Classes/subjects assigned to me |
+| `GET /teacher/my-timetable` | teacher | My weekly timetable |
 | `GET /teacher/classes/:classId/students` | teacher | Roster for a class I teach |
 | `GET /teacher/classes/:classId/attendance?date=` | teacher | Attendance for a class on a date |
 | `POST /teacher/classes/:classId/attendance` | teacher | Save attendance for a class/date |
 | `GET /teacher/classes/:classId/subjects/:subjectId/grades` | teacher | Grades I've entered |
 | `POST /teacher/classes/:classId/subjects/:subjectId/grades` | teacher | Enter a grade |
 | `GET /student/my-class` | student | My class + subjects/teachers |
+| `GET /student/my-timetable` | student | My weekly timetable |
 | `GET /student/my-attendance` | student | My attendance history |
 | `GET /student/my-grades` | student | My grades |
 | `GET /parent/my-children` | parent | My linked children |
-| `GET /parent/children/:studentId/details` | parent | One child's class, attendance, grades |
+| `GET /parent/children/:studentId/details` | parent | One child's class, timetable, attendance, grades |
 
 ---
 
@@ -275,8 +305,9 @@ npx tsc -b --noEmit
 - `npm run db:reset-and-seed` — ⚠️ **destructive**. Truncates every table
   and rebuilds a full sample dataset: 1 admin, 10 teachers, 52 students
   spread across 13 classes (Grade 1–13), 10 subjects, 20 parents linked to
-  students, one academic year marked current, plus sample attendance and
-  grades. Every seeded account uses the password `Password123!`.
+  students, one academic year marked current, a conflict-free weekly
+  timetable for every class, plus sample attendance and grades. Every seeded
+  account uses the password `Password123!`.
 
 ---
 
@@ -307,29 +338,38 @@ Notes:
 Colors and fonts are defined once as CSS variables in `client/src/index.css`
 (Tailwind v4 `@theme` block) and referenced everywhere as utility classes
 (`bg-marigold`, `font-display`, etc.) rather than hex codes, so the whole
-site's look can be changed by editing that one file.
+site's look — including dark mode — can be changed by editing that one file.
 
-| Token | Value | Used for |
+| Token | Light value | Used for |
 |---|---|---|
 | `--color-marigold` | `#FFB238` | Primary actions |
 | `--color-sky-teal` | `#2FA9A0` | Secondary accents, footer |
 | `--color-coral` | `#FF6F5E` | Destructive actions, highlights |
 | `--color-leaf` | `#7CC576` | Success states |
-| `--color-ink` | `#2B3A55` | Body text |
-| `--color-sun-cream` | `#FFF8E7` | Page background |
+| `--color-ink` | `#2B3A55` (dark: `#E7E5DC`) | Body text |
+| `--color-sun-cream` | `#FFF8E7` (dark: `#141c2b`) | Page background |
 | `--font-display` | Fredoka | Headings |
 | `--font-body` | Nunito | Body text |
+
+**Dark mode** is class-based (`.dark` on `<html>`, toggled via `ThemeContext`
+and persisted in `localStorage`), enabled by a `@custom-variant dark` rule in
+`index.css`. Because most of the app uses the theme tokens above instead of
+hardcoded colors, redefining `--color-ink` and `--color-sun-cream` under
+`.dark` re-colors the whole site from one place; plain `bg-white` cards get
+an explicit dark override alongside them.
 
 ---
 
 ## Known limitations & ideas for later
 
 - No password reset / "forgot password" flow (Admin resets passwords manually
-  via Edit on the Users list).
+  via Edit on the Users list, or users edit their own via My Profile).
 - No file uploads (e.g. profile photos, documents).
-- No pagination — list pages load everything at once, fine at this data
-  scale but would need it for a larger school.
+- No CSV/Excel export or import yet.
 - No automated tests yet.
+- No audit log of admin actions.
+- JWTs don't warn the user before expiring — a request just starts failing
+  and they're redirected to log in again.
 - Contact page form is UI-only (not wired to a backend endpoint or email).
 - Single-tenant: the system serves one school. Supporting multiple schools
   would need a `school_id` added across most tables.

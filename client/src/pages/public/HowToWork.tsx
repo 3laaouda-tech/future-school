@@ -16,28 +16,37 @@ const steps: Record<RoleKey, string[]> = {
     'Use "+ Add user" to create accounts for teachers, students, and parents.',
     'Go to "Classes" and "Subjects" to set up what your school offers.',
     'Open "Assign teachers" and pick a teacher for each subject in each class.',
+    'Open "Timetable" to schedule each subject into a day and period for a class — the system blocks any slot that would double-book a class or a teacher.',
     'Open "Enroll students" to place each student into their class for the year.',
     'Open "Link parents" to connect each parent to their child.',
+    'Search, filter by role, sort columns, or select multiple rows to delete in bulk from any list.',
   ],
   teacher: [
     "Log in with your teacher account.",
     'Your dashboard shows "My classes" — the classes and subjects assigned to you.',
+    'Click "My timetable" to see your full weekly schedule at a glance.',
     'On a class card, click "Take attendance" to mark each student present, absent, late, or excused for a chosen date.',
     'Click "Enter grades" to record a score for a student, choosing the term and assessment type.',
   ],
   student: [
     "Log in with your student account.",
     "Your dashboard shows your class, and the subjects and teachers you have.",
+    'Scroll down to "My timetable" to see your weekly schedule.',
     'Scroll down to "My attendance" to see your attendance history.',
     'Scroll down to "My grades" to see the scores you\'ve been given.',
   ],
   parent: [
     "Log in with your parent account.",
     "If you have more than one child linked to your account, pick their name from the tabs at the top.",
-    "See that child's class and subjects.",
+    "See that child's class, subjects, and weekly timetable.",
     "Scroll down to see their attendance and grades.",
   ],
 };
+
+const everyoneSteps = [
+  'Click your name in the top bar to open "My Profile" and update your name, email, or password.',
+  "Click the sun/moon icon to switch between light and dark mode — your choice is remembered next time you visit.",
+];
 
 export default function HowToWork() {
   const [active, setActive] = useState<RoleKey>("admin");
@@ -83,6 +92,19 @@ export default function HowToWork() {
           </li>
         ))}
       </ol>
+
+      {/* Steps that apply to every role */}
+      <h2 className="mt-12 text-center font-display text-lg font-semibold text-ink">
+        For everyone, regardless of role
+      </h2>
+      <ul className="mt-4 space-y-3">
+        {everyoneSteps.map((step) => (
+          <li key={step} className="flex gap-3 rounded-3xl bg-white p-4 shadow-sm">
+            <span className="text-leaf">✓</span>
+            <p className="font-body text-sm text-ink/80">{step}</p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

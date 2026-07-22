@@ -10,17 +10,19 @@ const roles = [
     icon: "🛠️",
     title: "Admin",
     points: [
-      "Add, edit, and remove user accounts",
+      "Add, edit, and remove user accounts, with search, filters, sorting, and bulk actions",
       "Manage academic years, classes, and subjects",
       "Assign teachers to classes and subjects",
+      "Build a weekly timetable for every class",
       "Enroll students and link parents to their children",
+      "See a live overview of school-wide numbers on the dashboard",
     ],
   },
   {
     icon: "🧑‍🏫",
     title: "Teacher",
     points: [
-      "See the classes and subjects assigned to them",
+      "See the classes and subjects assigned to them, and their weekly timetable",
       "Take daily attendance for their classes",
       "Enter grades for assessments",
     ],
@@ -30,6 +32,7 @@ const roles = [
     title: "Student",
     points: [
       "View their class, subjects, and teachers",
+      "Check their weekly timetable",
       "Check their attendance history",
       "Check their grades",
     ],
@@ -39,14 +42,15 @@ const roles = [
     title: "Parent",
     points: [
       "View a list of their linked children",
-      "See each child's class, attendance, and grades",
+      "See each child's class, timetable, attendance, and grades",
     ],
   },
 ];
 
 const dbHighlights = [
-  "10 related tables covering users, classes, subjects, enrollment, attendance, and grades",
+  "11 related tables covering users, classes, subjects, timetables, enrollment, attendance, and grades",
   'A fixed set of academic years (not free text), so every class always points to a real, valid year',
+  "A weekly timetable that's checked for conflicts automatically — no teacher or class can ever be double-booked",
   "Deleting a class or subject also removes anything that depended on it (enrollments, attendance, grades) — the interface always warns before this happens",
   "Every account's role is set once at creation and can't drift, keeping each person's data consistent",
 ];
@@ -105,6 +109,23 @@ export default function Documentation() {
               </ul>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Shared features */}
+      <section className="mx-auto max-w-4xl px-6 pb-16 text-center">
+        <h2 className="font-display text-2xl font-semibold text-ink">Every account gets</h2>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {["✏️ Edit their own profile", "🌙 Dark mode", "🔔 Instant feedback on every action"].map(
+            (item) => (
+              <span
+                key={item}
+                className="rounded-full bg-white px-4 py-2 font-body text-sm font-semibold text-ink shadow-sm"
+              >
+                {item}
+              </span>
+            )
+          )}
         </div>
       </section>
 
