@@ -30,6 +30,7 @@ export default function ParentStudents() {
   const [studentId, setStudentId] = useState("");
   const [relationship, setRelationship] = useState<Relationship>("father");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
 
   function loadAll(currentToken: string) {
     setIsLoading(true);
@@ -176,29 +177,54 @@ export default function ParentStudents() {
             </form>
           )}
 
-          <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">
-            {links.length === 0 ? (
-              <p className="p-6 font-body text-ink/60">No links yet.</p>
-            ) : (
-              <table className="w-full text-left font-body">
-                <thead className="bg-sun-cream text-sm text-ink/60">
-                  <tr>
-                    <th className="px-6 py-3">Parent</th>
-                    <th className="px-6 py-3">Student</th>
-                    <th className="px-6 py-3">Relationship</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {links.map((link) => (
-                    <tr key={`${link.parentId}-${link.studentId}`} className="border-t border-ink/5">
-                      <td className="px-6 py-3 text-ink">{link.parentName}</td>
-                      <td className="px-6 py-3 text-ink/70">{link.studentName}</td>
-                      <td className="px-6 py-3 text-ink/70 capitalize">{link.relationship}</td>
+          <input
+            type="text"
+            placeholder="Search by parent or student..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mt-6 w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body md:w-80"
+          />
+
+          <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
+            {(() => {
+              const filtered = links.filter((link) => {
+                const q = search.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  link.parentName.toLowerCase().includes(q) ||
+                  link.studentName.toLowerCase().includes(q)
+                );
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <p className="p-6 font-body text-ink/60">
+                    {links.length === 0 ? "No links yet." : "No links match your search."}
+                  </p>
+                );
+              }
+
+              return (
+                <table className="w-full text-left font-body">
+                  <thead className="bg-sun-cream text-sm text-ink/60">
+                    <tr>
+                      <th className="px-6 py-3">Parent</th>
+                      <th className="px-6 py-3">Student</th>
+                      <th className="px-6 py-3">Relationship</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody>
+                    {filtered.map((link) => (
+                      <tr key={`${link.parentId}-${link.studentId}`} className="border-t border-ink/5">
+                        <td className="px-6 py-3 text-ink">{link.parentName}</td>
+                        <td className="px-6 py-3 text-ink/70">{link.studentName}</td>
+                        <td className="px-6 py-3 text-ink/70 capitalize">{link.relationship}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
         </>
       )}

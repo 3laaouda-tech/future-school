@@ -14,6 +14,8 @@ import type { User } from "../../types/auth";
 import type { EnrollmentView } from "../../types/enrollments";
 import type { AcademicYear } from "../../types/academicYears";
 
+const PAGE_SIZE = 8;
+
 export default function Enrollments() {
   const { token } = useAuth();
   const { showToast } = useToast();
@@ -29,6 +31,8 @@ export default function Enrollments() {
   const [classId, setClassId] = useState("");
   const [academicYearId, setAcademicYearId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   function loadAll(currentToken: string) {
     setIsLoading(true);
@@ -186,29 +190,85 @@ export default function Enrollments() {
             </form>
           )}
 
-          <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">
-            {enrollments.length === 0 ? (
-              <p className="p-6 font-body text-ink/60">No enrollments yet.</p>
-            ) : (
-              <table className="w-full text-left font-body">
-                <thead className="bg-sun-cream text-sm text-ink/60">
-                  <tr>
-                    <th className="px-6 py-3">Student</th>
-                    <th className="px-6 py-3">Class</th>
-                    <th className="px-6 py-3">Academic year</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enrollments.map((e) => (
-                    <tr key={e.id} className="border-t border-ink/5">
-                      <td className="px-6 py-3 text-ink">{e.studentName}</td>
-                      <td className="px-6 py-3 text-ink/70">{e.className}</td>
-                      <td className="px-6 py-3 text-ink/70">{e.academicYear}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <input
+            type="text"
+            placeholder="Search by student or class..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="mt-6 w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body md:w-80"
+          />
+
+          <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
+            {(() => {
+              const filtered = enrollments.filter((e) => {
+                const q = search.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  e.studentName.toLowerCase().includes(q) ||
+                  e.className.toLowerCase().includes(q)
+                );
+              });
+              const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+              const currentPage = Math.min(page, totalPages);
+              const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+              if (filtered.length === 0) {
+                return (
+                  <p className="p-6 font-body text-ink/60">
+                    {enrollments.length === 0 ? "No enrollments yet." : "No enrollments match your search."}
+                  </p>
+                );
+              }
+
+              return (
+                <>
+                  <table className="w-full text-left font-body">
+                    <thead className="bg-sun-cream text-sm text-ink/60">
+                      <tr>
+                        <th className="px-6 py-3">Student</th>
+                        <th className="px-6 py-3">Class</th>
+                        <th className="px-6 py-3">Academic year</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paged.map((e) => (
+                        <tr key={e.id} className="border-t border-ink/5">
+                          <td className="px-6 py-3 text-ink">{e.studentName}</td>
+                          <td className="px-6 py-3 text-ink/70">{e.className}</td>
+                          <td className="px-6 py-3 text-ink/70">{e.academicYear}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filtered.length > PAGE_SIZE && (
+                    <div className="flex items-center justify-between border-t border-ink/5 px-6 py-3">
+                      <p className="font-body text-sm text-ink/60">
+                        Page {currentPage} of {totalPages}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="rounded-full border-2 border-ink/10 bg-white px-4 py-1 font-body text-sm font-bold text-ink disabled:opacity-40"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="rounded-full border-2 border-ink/10 bg-white px-4 py-1 font-body text-sm font-bold text-ink disabled:opacity-40"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </>
       )}

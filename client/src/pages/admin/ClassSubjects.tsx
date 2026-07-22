@@ -14,6 +14,8 @@ import type { Subject } from "../../types/subjects";
 import type { User } from "../../types/auth";
 import type { ClassSubjectView } from "../../types/classSubjects";
 
+const PAGE_SIZE = 8;
+
 export default function ClassSubjects() {
   const { token } = useAuth();
   const { showToast } = useToast();
@@ -29,6 +31,8 @@ export default function ClassSubjects() {
   const [subjectId, setSubjectId] = useState("");
   const [teacherId, setTeacherId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   function loadAll(currentToken: string) {
     setIsLoading(true);
@@ -186,29 +190,86 @@ export default function ClassSubjects() {
             </form>
           )}
 
-          <div className="mt-6 overflow-hidden rounded-3xl bg-white shadow-sm">
-            {assignments.length === 0 ? (
-              <p className="p-6 font-body text-ink/60">No assignments yet.</p>
-            ) : (
-              <table className="w-full text-left font-body">
-                <thead className="bg-sun-cream text-sm text-ink/60">
-                  <tr>
-                    <th className="px-6 py-3">Class</th>
-                    <th className="px-6 py-3">Subject</th>
-                    <th className="px-6 py-3">Teacher</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignments.map((a) => (
-                    <tr key={a.id} className="border-t border-ink/5">
-                      <td className="px-6 py-3 text-ink">{a.className}</td>
-                      <td className="px-6 py-3 text-ink/70">{a.subjectName}</td>
-                      <td className="px-6 py-3 text-ink/70">{a.teacherName}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <input
+            type="text"
+            placeholder="Search by class, subject, or teacher..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="mt-6 w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body md:w-80"
+          />
+
+          <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
+            {(() => {
+              const filtered = assignments.filter((a) => {
+                const q = search.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  a.className.toLowerCase().includes(q) ||
+                  a.subjectName.toLowerCase().includes(q) ||
+                  a.teacherName.toLowerCase().includes(q)
+                );
+              });
+              const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+              const currentPage = Math.min(page, totalPages);
+              const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+              if (filtered.length === 0) {
+                return (
+                  <p className="p-6 font-body text-ink/60">
+                    {assignments.length === 0 ? "No assignments yet." : "No assignments match your search."}
+                  </p>
+                );
+              }
+
+              return (
+                <>
+                  <table className="w-full text-left font-body">
+                    <thead className="bg-sun-cream text-sm text-ink/60">
+                      <tr>
+                        <th className="px-6 py-3">Class</th>
+                        <th className="px-6 py-3">Subject</th>
+                        <th className="px-6 py-3">Teacher</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paged.map((a) => (
+                        <tr key={a.id} className="border-t border-ink/5">
+                          <td className="px-6 py-3 text-ink">{a.className}</td>
+                          <td className="px-6 py-3 text-ink/70">{a.subjectName}</td>
+                          <td className="px-6 py-3 text-ink/70">{a.teacherName}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filtered.length > PAGE_SIZE && (
+                    <div className="flex items-center justify-between border-t border-ink/5 px-6 py-3">
+                      <p className="font-body text-sm text-ink/60">
+                        Page {currentPage} of {totalPages}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="rounded-full border-2 border-ink/10 bg-white px-4 py-1 font-body text-sm font-bold text-ink disabled:opacity-40"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="rounded-full border-2 border-ink/10 bg-white px-4 py-1 font-body text-sm font-bold text-ink disabled:opacity-40"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </>
       )}
