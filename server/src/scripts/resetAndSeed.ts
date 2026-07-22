@@ -8,6 +8,8 @@ import { createClass } from "../services/classes.service";
 import type { gradeLevels } from "../validators/classes.schema";
 import { createSubject } from "../services/subjects.service";
 import { createClassSubject } from "../services/classSubjects.service";
+import { createTimetableEntry } from "../services/timetable.service";
+import { daysOfWeek } from "../validators/timetable.schema";
 import { createEnrollment } from "../services/enrollments.service";
 import { saveAttendance } from "../services/attendance.service";
 import { createGrade } from "../services/grades.service";
@@ -15,12 +17,13 @@ import { createParentStudentLink } from "../services/parentStudent.service";
 
 const ACADEMIC_YEAR = "2026-2027";
 const DEFAULT_PASSWORD = "Password123!";
+const periodsPerDay = 7;
 
 async function resetDatabase(): Promise<void> {
   await pool.query(
     `TRUNCATE TABLE
        grades, attendance, parent_student, enrollments,
-       class_subjects, subjects, classes, academic_years,
+       timetable_entries, class_subjects, subjects, classes, academic_years,
        parents, students, teachers, users
      RESTART IDENTITY CASCADE`
   );
@@ -117,17 +120,32 @@ async function seed(): Promise<void> {
   }
   console.log(`${classes.length} classes created.`);
 
-  // ---- Assign every subject's teacher to every class ----
-  for (const cls of classes) {
+  // ---- Assign every subject's teacher to every class, and schedule
+  // each assignment into a weekly time slot. The slot formula below
+  // (classIndex + subjectIndex) guarantees no teacher ever has two
+  // classes at the same time, and no class ever has two subjects at
+  // the same time - see the "Known limitations" note in the README
+  // for the reasoning if this is ever extended.
+  for (let c = 0; c < classes.length; c++) {
     for (let i = 0; i < subjects.length; i++) {
-      await createClassSubject({
-        classId: cls.id,
+      const classSubject = await createClassSubject({
+        classId: classes[c].id,
         subjectId: subjects[i].id,
         teacherId: teachers[i].id,
       });
+
+      const slot = (c + i) % (daysOfWeek.length * periodsPerDay);
+      const dayOfWeek = daysOfWeek[Math.floor(slot / periodsPerDay)];
+      const period = (slot % periodsPerDay) + 1;
+
+      await createTimetableEntry({
+        classSubjectId: classSubject.id,
+        dayOfWeek,
+        period,
+      });
     }
   }
-  console.log("Teachers assigned to all classes.");
+  console.log("Teachers assigned and timetable scheduled for all classes.");
 
   // ---- Students (50+), spread evenly across the 13 classes ----
   const STUDENT_COUNT = 52; // 4 students per class across 13 classes

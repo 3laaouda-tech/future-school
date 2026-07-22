@@ -5,7 +5,9 @@ import { useToast } from "../../context/ToastContext";
 import { getUsersRequest, updateUserRequest, deleteUserRequest } from "../../api/usersApi";
 import { ApiError } from "../../api/client";
 import { SkeletonRow } from "../../components/Skeleton";
-import type { User } from "../../types/auth";
+import type { User, UserRole } from "../../types/auth";
+
+const PAGE_SIZE = 8;
 
 const roleBadgeColor: Record<User["role"], string> = {
   admin: "bg-coral/20 text-coral",
@@ -13,6 +15,14 @@ const roleBadgeColor: Record<User["role"], string> = {
   student: "bg-marigold/20 text-ink",
   parent: "bg-leaf/20 text-leaf",
 };
+
+const roleFilterOptions: { value: UserRole | "all"; label: string }[] = [
+  { value: "all", label: "All roles" },
+  { value: "admin", label: "Admin" },
+  { value: "teacher", label: "Teacher" },
+  { value: "student", label: "Student" },
+  { value: "parent", label: "Parent" },
+];
 
 interface UserRowProps {
   user: User;
@@ -158,6 +168,8 @@ export default function UsersList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!token) return;
@@ -177,10 +189,29 @@ export default function UsersList() {
   }
 
   const filteredUsers = users.filter((u) => {
+    if (roleFilter !== "all" && u.role !== roleFilter) return false;
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedUsers = filteredUsers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  // reset to page 1 whenever the search or role filter changes
+  function updateSearch(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
+
+  function updateRoleFilter(value: UserRole | "all") {
+    setRoleFilter(value);
+    setPage(1);
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
@@ -199,13 +230,26 @@ export default function UsersList() {
         </Link>
       </div>
 
-      <input
-        type="text"
-        placeholder="Search by name or email..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mt-6 w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body md:w-80"
-      />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => updateSearch(e.target.value)}
+          className="w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body sm:w-80"
+        />
+        <select
+          value={roleFilter}
+          onChange={(e) => updateRoleFilter(e.target.value as UserRole | "all")}
+          className="w-full rounded-xl border border-ink/10 bg-white px-4 py-2 font-body sm:w-44"
+        >
+          {roleFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="mt-4 overflow-hidden rounded-3xl bg-white shadow-sm">
         {isLoading && (
@@ -233,7 +277,7 @@ export default function UsersList() {
           </p>
         )}
 
-        {!isLoading && !error && filteredUsers.length > 0 && token && (
+        {!isLoading && !error && pagedUsers.length > 0 && token && (
           <table className="w-full text-left font-body">
             <thead className="bg-sun-cream text-sm text-ink/60">
               <tr>
@@ -244,7 +288,7 @@ export default function UsersList() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
+              {pagedUsers.map((user) => (
                 <UserRow
                   key={user.id}
                   user={user}
@@ -257,6 +301,30 @@ export default function UsersList() {
           </table>
         )}
       </div>
+
+      {!isLoading && !error && filteredUsers.length > PAGE_SIZE && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="font-body text-sm text-ink/60">
+            Page {currentPage} of {totalPages} ({filteredUsers.length} users)
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded-full border-2 border-ink/10 bg-white px-4 py-1.5 font-body text-sm font-bold text-ink disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-full border-2 border-ink/10 bg-white px-4 py-1.5 font-body text-sm font-bold text-ink disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
