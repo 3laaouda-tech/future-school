@@ -24,6 +24,33 @@ const roleFilterOptions: { value: UserRole | "all"; label: string }[] = [
   { value: "parent", label: "Parent" },
 ];
 
+type SortKey = "fullName" | "email" | "role";
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentSort,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  currentSort: { key: SortKey; direction: "asc" | "desc" };
+  onSort: (key: SortKey) => void;
+}) {
+  const isActive = currentSort.key === sortKey;
+  return (
+    <th className="px-6 py-3">
+      <button
+        onClick={() => onSort(sortKey)}
+        className="flex items-center gap-1 font-body text-sm font-semibold text-ink/60 hover:text-ink"
+      >
+        {label}
+        <span className="text-xs">{isActive ? (currentSort.direction === "asc" ? "▲" : "▼") : ""}</span>
+      </button>
+    </th>
+  );
+}
+
 interface UserRowProps {
   user: User;
   token: string;
@@ -170,6 +197,19 @@ export default function UsersList() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<{ key: SortKey; direction: "asc" | "desc" }>({
+    key: "fullName",
+    direction: "asc",
+  });
+
+  function handleSort(key: SortKey) {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" }
+    );
+    setPage(1);
+  }
 
   useEffect(() => {
     if (!token) return;
@@ -188,12 +228,17 @@ export default function UsersList() {
     setUsers((prev) => prev.filter((u) => u.id !== id));
   }
 
-  const filteredUsers = users.filter((u) => {
-    if (roleFilter !== "all" && u.role !== roleFilter) return false;
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-  });
+  const filteredUsers = users
+    .filter((u) => {
+      if (roleFilter !== "all" && u.role !== roleFilter) return false;
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      const result = a[sort.key].localeCompare(b[sort.key]);
+      return sort.direction === "asc" ? result : -result;
+    });
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -281,9 +326,9 @@ export default function UsersList() {
           <table className="w-full text-left font-body">
             <thead className="bg-sun-cream text-sm text-ink/60">
               <tr>
-                <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Email</th>
-                <th className="px-6 py-3">Role</th>
+                <SortableHeader label="Name" sortKey="fullName" currentSort={sort} onSort={handleSort} />
+                <SortableHeader label="Email" sortKey="email" currentSort={sort} onSort={handleSort} />
+                <SortableHeader label="Role" sortKey="role" currentSort={sort} onSort={handleSort} />
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>

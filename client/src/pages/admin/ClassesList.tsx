@@ -16,6 +16,33 @@ import { gradeLevels } from "../../constants";
 import type { SchoolClass } from "../../types/classes";
 import type { AcademicYear } from "../../types/academicYears";
 
+type SortKey = "name" | "gradeLevel" | "academicYearLabel";
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentSort,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  currentSort: { key: SortKey; direction: "asc" | "desc" };
+  onSort: (key: SortKey) => void;
+}) {
+  const isActive = currentSort.key === sortKey;
+  return (
+    <th className="px-6 py-3">
+      <button
+        onClick={() => onSort(sortKey)}
+        className="flex items-center gap-1 font-body text-sm font-semibold text-ink/60 hover:text-ink"
+      >
+        {label}
+        <span className="text-xs">{isActive ? (currentSort.direction === "asc" ? "▲" : "▼") : ""}</span>
+      </button>
+    </th>
+  );
+}
+
 interface ClassRowProps {
   cls: SchoolClass;
   token: string;
@@ -164,6 +191,18 @@ export default function ClassesList() {
   const [academicYearId, setAcademicYearId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<{ key: SortKey; direction: "asc" | "desc" }>({
+    key: "name",
+    direction: "asc",
+  });
+
+  function handleSort(key: SortKey) {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" }
+    );
+  }
 
   function loadAll(currentToken: string) {
     setIsLoading(true);
@@ -217,15 +256,20 @@ export default function ClassesList() {
     setClasses((prev) => prev.filter((c) => c.id !== id));
   }
 
-  const filteredClasses = classes.filter((c) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.gradeLevel.toLowerCase().includes(q) ||
-      c.academicYearLabel.toLowerCase().includes(q)
-    );
-  });
+  const filteredClasses = classes
+    .filter((c) => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.gradeLevel.toLowerCase().includes(q) ||
+        c.academicYearLabel.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const result = a[sort.key].localeCompare(b[sort.key]);
+      return sort.direction === "asc" ? result : -result;
+    });
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
@@ -350,9 +394,9 @@ export default function ClassesList() {
           <table className="w-full text-left font-body">
             <thead className="bg-sun-cream text-sm text-ink/60">
               <tr>
-                <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Grade level</th>
-                <th className="px-6 py-3">Academic year</th>
+                <SortableHeader label="Name" sortKey="name" currentSort={sort} onSort={handleSort} />
+                <SortableHeader label="Grade level" sortKey="gradeLevel" currentSort={sort} onSort={handleSort} />
+                <SortableHeader label="Academic year" sortKey="academicYearLabel" currentSort={sort} onSort={handleSort} />
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
