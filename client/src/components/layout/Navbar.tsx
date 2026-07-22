@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import Logo from "../Logo";
+import { useTheme } from "../../context/ThemeContext";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -12,6 +13,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 bg-sun-cream/90 backdrop-blur-sm">
@@ -50,6 +52,14 @@ export default function Navbar() {
           Log in
         </Link>
 
+        <button
+          onClick={toggleTheme}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="hidden h-10 w-10 items-center justify-center rounded-full bg-white/60 text-ink md:flex"
+        >
+          {isDark ? "☀️" : "🌙"}
+        </button>
+
         {/* Mobile hamburger toggle */}
         <button
           onClick={() => setIsMenuOpen((open) => !open)}
@@ -83,6 +93,12 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
+            <button
+              onClick={toggleTheme}
+              className="mt-1 flex items-center gap-2 rounded-xl px-4 py-2 text-left font-body text-sm font-semibold text-ink/70 hover:bg-white/60"
+            >
+              {isDark ? "☀️ Light mode" : "🌙 Dark mode"}
+            </button>
             <Link
               to="/login"
               onClick={() => setIsMenuOpen(false)}

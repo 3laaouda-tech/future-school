@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import type { UserRole } from "../../types/auth";
 import Logo from "../Logo";
 
@@ -14,6 +15,7 @@ const roleBadgeColor: Record<UserRole, string> = {
 // a shared navbar: brand, current user info, and a working logout button.
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -32,6 +34,13 @@ export default function AppLayout() {
 
           {user && (
             <div className="flex items-center gap-4">
+              <button
+                onClick={toggleTheme}
+                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-ink/10 text-ink transition-transform hover:scale-105"
+              >
+                {isDark ? "☀️" : "🌙"}
+              </button>
               <Link to="/profile" className="text-right transition-opacity hover:opacity-70">
                 <p className="font-body text-sm font-semibold text-ink">{user.fullName}</p>
                 <span

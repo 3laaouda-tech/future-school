@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* Enables the `dark:` variant to be controlled by a .dark class on <html>,
+   instead of only following the OS-level color scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-marigold: #FFB238;
   --color-sky-teal: #2FA9A0;
@@ -17,8 +21,26 @@ body {
   background-color: var(--color-sun-cream);
   color: var(--color-ink);
   font-family: var(--font-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
+}
+
+/* Dark mode: redefining these two variables re-colors the whole site,
+   since every page uses `bg-sun-cream` / `text-ink` / `border-ink/…`
+   rather than hardcoded hex values. */
+.dark {
+  --color-sun-cream: #141c2b;
+  --color-ink: #E7E5DC;
+}
+
+/* Card backgrounds across the app use plain `bg-white` (not a themed
+   token), so they need an explicit dark override too. */
+.dark .bg-white {
+  background-color: #1f2937;
+}
+.dark .bg-white\/60 {
+  background-color: rgb(31 41 55 / 0.6);
 }
